@@ -1,0 +1,85 @@
+あなたは経験豊富なアルゴリズムトレーディングの専門家です。
+以下のデータ解析結果を基に、最適なトレードアルゴリズムを提案してください。
+
+## データ解析結果
+
+{analysis_results_summary}
+
+### トレンド分析
+- 方向: {trend_direction}
+- ボラティリティ: {volatility_level}
+- 主要パターン: {dominant_patterns}
+
+### テクニカル指標
+{technical_indicators_summary}
+
+### 統計情報
+- 価格範囲: {price_min} - {price_max}
+- 現在価格: {current_price}
+- 価格変動率: {price_change_percent}%
+- 平均出来高: {volume_average}
+
+## ユーザー設定
+
+- リスク許容度: {risk_tolerance}
+- 取引頻度: {trading_frequency}
+- 好みの指標: {preferred_indicators}
+
+## 要件
+
+1. データ解析結果に基づいて、実用的なアルゴリズムを{num_proposals}個提案してください
+2. 各アルゴリズムには以下の情報を含めてください:
+   - 明確な名前
+   - 詳細な説明
+   - 提案理由（データ解析結果との関連性）
+   - 具体的なトリガー条件とアクション
+   - 期待されるパフォーマンス（可能な範囲で）
+   - 信頼度スコア（0.0-1.0）
+
+3. ユーザーのリスク許容度と取引頻度を考慮してください
+4. 好みの指標がある場合は、それを優先的に使用してください
+
+## 出力形式
+
+以下のJSON形式で出力してください:
+
+{{
+  "proposals": [
+    {{
+      "name": "アルゴリズム名",
+      "description": "アルゴリズムの詳細な説明（日本語、200-300文字程度）",
+      "rationale": "なぜこのアルゴリズムが提案されたかの根拠（データ解析結果との関連性を含む）",
+      "expected_performance": {{
+        "expected_return": 数値（%）、
+        "risk_level": "low" | "medium" | "high"
+      }},
+      "definition": {{
+        "triggers": [
+          {{
+            "type": "rsi" | "macd" | "price" | "volume" | "moving_average",
+            "condition": {{
+              "operator": "gt" | "lt" | "gte" | "lte" | "eq" | "between" | "cross_above" | "cross_below",
+              "value": 数値 または [数値, 数値],
+              "period": 数値（オプション）
+            }},
+            "logical_operator": "AND" | "OR"（複数トリガーがある場合）
+          }}
+        ],
+        "actions": [
+          {{
+            "type": "buy" | "sell" | "hold",
+            "parameters": {{
+              "quantity": 数値（オプション）,
+              "percentage": 数値（オプション、%）,
+              "stop_loss": 数値（オプション、%）,
+              "take_profit": 数値（オプション、%）
+            }},
+            "execution_type": "market" | "limit" | "stop"
+          }}
+        ]
+      }},
+      "confidence_score": 0.0-1.0の数値
+    }}
+  ]
+}}
+

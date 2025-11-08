@@ -1,0 +1,39 @@
+# Core dependencies
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Database
+# sqlite3 is built-in, no need to install
+
+# Data collection
+requests>=2.31.0
+httpx>=0.24.0
+feedparser>=6.0.10
+beautifulsoup4>=4.12.0
+yfinance>=0.2.0
+
+# Data analysis
+# TA-Lib>=0.4.28  # Note: Requires TA-Lib C library to be installed separately
+scipy>=1.11.0
+
+# LLM integration
+openai>=1.0.0
+anthropic>=0.7.0
+tiktoken>=0.5.0
+
+# Utilities
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+tenacity>=8.2.0  # For retry logic
+
+# Sentiment analysis (optional)
+textblob>=0.17.1
+vaderSentiment>=3.3.2
+
+# Scheduling
+APScheduler>=3.10.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
