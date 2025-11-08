@@ -21,7 +21,6 @@ export interface BacktestJob {
 }
 
 export interface BacktestResult {
-  id: number;
   job_id: string;
   algorithm_id: number;
   start_date: string;
@@ -29,7 +28,7 @@ export interface BacktestResult {
   performance: PerformanceMetrics;
   trades: Trade[];
   equity_curve: EquityPoint[];
-  created_at: string;
+  created_at?: string;  // Optional, may not be included in API response
 }
 
 export interface PerformanceMetrics {
@@ -43,8 +42,6 @@ export interface PerformanceMetrics {
 }
 
 export interface Trade {
-  id: number;
-  job_id: string;
   entry_date: string;
   exit_date: string;
   entry_price: number;
@@ -55,8 +52,6 @@ export interface Trade {
 }
 
 export interface EquityPoint {
-  id: number;
-  job_id: string;
   date: string;
   equity: number;
 }

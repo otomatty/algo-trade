@@ -11,21 +11,23 @@ import { SelectAlgorithmDialog } from './SelectAlgorithmDialog';
 import { MantineProvider } from '@mantine/core';
 import { setupDOM, setupDOMSync } from '../../test-utils/dom-setup';
 import { AlgorithmProposal } from '../../types/algorithm';
-import { invoke } from '@tauri-apps/api/core';
-import { notifications } from '@mantine/notifications';
 
 // Setup DOM synchronously before module initialization
 setupDOMSync();
 
 // Mock Tauri API
+const mockInvoke = mock((_cmd: string, ..._args: any[]) => Promise.resolve({ algorithm_id: 1, name: 'Test Algorithm' }));
+
 mock.module('@tauri-apps/api/core', () => ({
-  invoke: mock(() => Promise.resolve({ algorithm_id: 1, name: 'Test Algorithm' })),
+  invoke: mockInvoke,
 }));
 
 // Mock notifications
+const mockNotificationsShow = mock(() => {});
+
 mock.module('@mantine/notifications', () => ({
   notifications: {
-    show: mock(() => {}),
+    show: mockNotificationsShow,
   },
 }));
 
@@ -37,10 +39,8 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
 
   beforeEach(() => {
     // Reset mocks
-    const { invoke } = require('@tauri-apps/api/core');
-    invoke.mockClear();
-    const { notifications } = require('@mantine/notifications');
-    notifications.show.mockClear();
+    mockInvoke.mockClear();
+    mockNotificationsShow.mockClear();
   });
 
   const mockProposal: AlgorithmProposal = {
@@ -130,7 +130,6 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
 
   it('should call select_algorithm command when Select Algorithm button is clicked', async () => {
     const onClose = mock(() => {});
-    const { invoke } = require('@tauri-apps/api/core');
     const { userEvent } = await import('@testing-library/user-event');
 
     const { baseElement } = render(
@@ -139,11 +138,15 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
       </MantineProvider>
     );
 
-    const selectButton = within(baseElement).getByText('Select Algorithm');
-    await userEvent.click(selectButton);
+    const buttons = within(baseElement).getAllByRole('button');
+    const selectButton = buttons.find(btn => btn.textContent?.includes('Select Algorithm') && !(btn as HTMLButtonElement).disabled);
+    expect(selectButton).toBeDefined();
+    if (selectButton) {
+      await userEvent.click(selectButton);
+    }
 
     await waitFor(() => {
-      expect(invoke).toHaveBeenCalledWith('select_algorithm', {
+      expect(mockInvoke).toHaveBeenCalledWith('select_algorithm', {
         proposal_id: 'prop-123',
         custom_name: undefined,
       });
@@ -152,7 +155,6 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
 
   it('should call select_algorithm with custom name when provided', async () => {
     const onClose = mock(() => {});
-    const { invoke } = require('@tauri-apps/api/core');
     const { userEvent } = await import('@testing-library/user-event');
 
     const { baseElement } = render(
@@ -164,11 +166,15 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
     const customNameInput = within(baseElement).getByLabelText(/Custom Name/i);
     await userEvent.type(customNameInput, 'My Custom Algorithm');
 
-    const selectButton = within(baseElement).getByText('Select Algorithm');
-    await userEvent.click(selectButton);
+    const buttons = within(baseElement).getAllByRole('button');
+    const selectButton = buttons.find(btn => btn.textContent?.includes('Select Algorithm') && !(btn as HTMLButtonElement).disabled);
+    expect(selectButton).toBeDefined();
+    if (selectButton) {
+      await userEvent.click(selectButton);
+    }
 
     await waitFor(() => {
-      expect(invoke).toHaveBeenCalledWith('select_algorithm', {
+      expect(mockInvoke).toHaveBeenCalledWith('select_algorithm', {
         proposal_id: 'prop-123',
         custom_name: 'My Custom Algorithm',
       });
@@ -177,8 +183,6 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
 
   it('should show success notification on successful selection', async () => {
     const onClose = mock(() => {});
-    const { invoke } = require('@tauri-apps/api/core');
-    const { notifications } = require('@mantine/notifications');
     const { userEvent } = await import('@testing-library/user-event');
 
     const { baseElement } = render(
@@ -187,11 +191,15 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
       </MantineProvider>
     );
 
-    const selectButton = within(baseElement).getByText('Select Algorithm');
-    await userEvent.click(selectButton);
+    const buttons = within(baseElement).getAllByRole('button');
+    const selectButton = buttons.find(btn => btn.textContent?.includes('Select Algorithm') && !(btn as HTMLButtonElement).disabled);
+    expect(selectButton).toBeDefined();
+    if (selectButton) {
+      await userEvent.click(selectButton);
+    }
 
     await waitFor(() => {
-      expect(notifications.show).toHaveBeenCalledWith(
+      expect(mockNotificationsShow).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Algorithm Selected',
           color: 'green',
@@ -202,9 +210,7 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
 
   it('should show error notification on failed selection', async () => {
     const onClose = mock(() => {});
-    const { invoke } = require('@tauri-apps/api/core');
-    const { notifications } = require('@mantine/notifications');
-    invoke.mockRejectedValueOnce(new Error('Failed to select algorithm'));
+    mockInvoke.mockRejectedValueOnce(new Error('Failed to select algorithm'));
     const { userEvent } = await import('@testing-library/user-event');
 
     const { baseElement } = render(
@@ -213,11 +219,15 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
       </MantineProvider>
     );
 
-    const selectButton = within(baseElement).getByText('Select Algorithm');
-    await userEvent.click(selectButton);
+    const buttons = within(baseElement).getAllByRole('button');
+    const selectButton = buttons.find(btn => btn.textContent?.includes('Select Algorithm') && !(btn as HTMLButtonElement).disabled);
+    expect(selectButton).toBeDefined();
+    if (selectButton) {
+      await userEvent.click(selectButton);
+    }
 
     await waitFor(() => {
-      expect(notifications.show).toHaveBeenCalledWith(
+      expect(mockNotificationsShow).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Selection Failed',
           color: 'red',
@@ -281,8 +291,12 @@ describe('SelectAlgorithmDialog - Phase 6', () => {
       </MantineProvider>
     );
 
-    const selectButton = within(baseElement).getByText('Select Algorithm');
-    await userEvent.click(selectButton);
+    const buttons = within(baseElement).getAllByRole('button');
+    const selectButton = buttons.find(btn => btn.textContent?.includes('Select Algorithm') && !(btn as HTMLButtonElement).disabled);
+    expect(selectButton).toBeDefined();
+    if (selectButton) {
+      await userEvent.click(selectButton);
+    }
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalled();

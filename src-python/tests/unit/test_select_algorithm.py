@@ -154,7 +154,8 @@ class TestSelectAlgorithm:
              patch('sys.stdout', new_callable=StringIO) as mock_stdout, \
              patch('scripts.select_algorithm.get_connection', return_value=conn):
             
-            main()
+            with pytest.raises(SystemExit):
+                main()
             
             output = json.loads(mock_stdout.getvalue())
             assert output['success'] is False
@@ -177,7 +178,8 @@ class TestSelectAlgorithm:
              patch('sys.stdout', new_callable=StringIO) as mock_stdout, \
              patch('scripts.select_algorithm.get_connection', return_value=conn):
             
-            main()
+            with pytest.raises(SystemExit):
+                main()
             
             output = json.loads(mock_stdout.getvalue())
             assert output['success'] is False
