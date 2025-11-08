@@ -531,12 +531,12 @@
 - [x] `react-markdown`依存関係追加
 - [x] テスト追加（ProposalCard: 9テストケース、ProposalList: 4テストケース、ProposalDetailModal: 10テストケース、get_algorithm_proposals: 3テストケース、全て通過）
 
-### Phase 6: アルゴリズム選択機能
-- [ ] `select_algorithm.py` 作成
-- [ ] Tauriコマンド `select_algorithm` 追加
-- [ ] 選択UI実装
-- [ ] 選択確認ダイアログ実装
-- [ ] テスト追加
+### Phase 6: アルゴリズム選択機能 ✅ **完了** (2025年11月8日)
+- [x] `select_algorithm.py` 作成
+- [x] Tauriコマンド `select_algorithm` 追加
+- [x] 選択UI実装（`SelectAlgorithmDialog.tsx`）
+- [x] `ProposalList.tsx`に選択機能統合
+- [x] テスト追加（バックエンド: 4テストケース、フロントエンド: SelectAlgorithmDialog 11テストケース、ProposalList 3テストケース追加）
 
 ## 注意事項
 

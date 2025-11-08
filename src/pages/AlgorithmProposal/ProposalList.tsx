@@ -10,7 +10,8 @@
  *   ├─ @mantine/core
  *   ├─ src/types/algorithm
  *   ├─ ./ProposalCard
- *   └─ ./ProposalDetailModal
+ *   ├─ ./ProposalDetailModal
+ *   └─ ./SelectAlgorithmDialog
  * 
  * Related Documentation:
  *   ├─ Spec: src/pages/AlgorithmProposal/AlgorithmProposal.spec.md
@@ -21,6 +22,7 @@ import { Paper, Text, Stack, Grid } from '@mantine/core';
 import { AlgorithmProposal as AlgorithmProposalType } from '../../types/algorithm';
 import { ProposalCard } from './ProposalCard';
 import { ProposalDetailModal } from './ProposalDetailModal';
+import { SelectAlgorithmDialog } from './SelectAlgorithmDialog';
 
 interface ProposalListProps {
   proposals: AlgorithmProposalType[];
@@ -29,6 +31,8 @@ interface ProposalListProps {
 export function ProposalList({ proposals }: ProposalListProps) {
   const [selectedProposal, setSelectedProposal] = useState<AlgorithmProposalType | null>(null);
   const [modalOpened, setModalOpened] = useState(false);
+  const [selectProposal, setSelectProposal] = useState<AlgorithmProposalType | null>(null);
+  const [selectDialogOpened, setSelectDialogOpened] = useState(false);
 
   const handleViewDetails = (proposal: AlgorithmProposalType) => {
     setSelectedProposal(proposal);
@@ -38,6 +42,16 @@ export function ProposalList({ proposals }: ProposalListProps) {
   const handleCloseModal = () => {
     setModalOpened(false);
     setSelectedProposal(null);
+  };
+
+  const handleSelect = (proposal: AlgorithmProposalType) => {
+    setSelectProposal(proposal);
+    setSelectDialogOpened(true);
+  };
+
+  const handleCloseSelectDialog = () => {
+    setSelectDialogOpened(false);
+    setSelectProposal(null);
   };
 
   if (proposals.length === 0) {
@@ -68,6 +82,7 @@ export function ProposalList({ proposals }: ProposalListProps) {
                 <ProposalCard
                   proposal={proposal}
                   onViewDetails={handleViewDetails}
+                  onSelect={handleSelect}
                 />
               </Grid.Col>
             ))}
@@ -78,6 +93,11 @@ export function ProposalList({ proposals }: ProposalListProps) {
         proposal={selectedProposal}
         opened={modalOpened}
         onClose={handleCloseModal}
+      />
+      <SelectAlgorithmDialog
+        proposal={selectProposal}
+        opened={selectDialogOpened}
+        onClose={handleCloseSelectDialog}
       />
     </>
   );

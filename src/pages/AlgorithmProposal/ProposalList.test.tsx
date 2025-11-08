@@ -1,12 +1,12 @@
 /**
- * Tests for ProposalList component - Phase 5
+ * Tests for ProposalList component - Phase 5 & 6
  * 
  * Related Documentation:
  *   ├─ Spec: src/pages/AlgorithmProposal/AlgorithmProposal.spec.md
  *   └─ Plan: docs/03_plans/algorithm-proposal/README.md
  */
 import { describe, it, expect, beforeEach, beforeAll, mock } from 'bun:test';
-import { render, within } from '@testing-library/react';
+import { render, within, waitFor } from '@testing-library/react';
 import { ProposalList } from './ProposalList';
 import { MantineProvider } from '@mantine/core';
 import { setupDOM, setupDOMSync } from '../../test-utils/dom-setup';
@@ -14,6 +14,19 @@ import { AlgorithmProposal } from '../../types/algorithm';
 
 // Setup DOM synchronously before module initialization
 setupDOMSync();
+
+// Mock SelectAlgorithmDialog
+mock.module('./SelectAlgorithmDialog', () => ({
+  SelectAlgorithmDialog: ({ proposal, opened, onClose }: { proposal: AlgorithmProposal | null; opened: boolean; onClose: () => void }) => {
+    if (!opened || !proposal) return null;
+    return (
+      <div data-testid="select-algorithm-dialog">
+        <div>Select Algorithm Dialog</div>
+        <button onClick={onClose}>Close Dialog</button>
+      </div>
+    );
+  },
+}));
 
 describe('ProposalList - Phase 5', () => {
   // Ensure DOM is set up before all tests
@@ -135,6 +148,67 @@ describe('ProposalList - Phase 5', () => {
 
     expect(within(container).getByText('75%')).toBeDefined();
     expect(within(container).getByText('85%')).toBeDefined();
+  });
+
+  it('should open select dialog when Select button is clicked', async () => {
+    const { userEvent } = await import('@testing-library/user-event');
+
+    const { baseElement } = render(
+      <MantineProvider>
+        <ProposalList proposals={mockProposals} />
+      </MantineProvider>
+    );
+
+    const selectButtons = within(baseElement).getAllByText('Select');
+    expect(selectButtons.length).toBeGreaterThan(0);
+
+    await userEvent.click(selectButtons[0]);
+
+    await waitFor(() => {
+      expect(within(baseElement).getByTestId('select-algorithm-dialog')).toBeDefined();
+    });
+  });
+
+  it('should close select dialog when closed', async () => {
+    const { userEvent } = await import('@testing-library/user-event');
+
+    const { baseElement } = render(
+      <MantineProvider>
+        <ProposalList proposals={mockProposals} />
+      </MantineProvider>
+    );
+
+    const selectButtons = within(baseElement).getAllByText('Select');
+    await userEvent.click(selectButtons[0]);
+
+    await waitFor(() => {
+      expect(within(baseElement).getByTestId('select-algorithm-dialog')).toBeDefined();
+    });
+
+    const closeButton = within(baseElement).getByText('Close Dialog');
+    await userEvent.click(closeButton);
+
+    await waitFor(() => {
+      expect(within(baseElement).queryByTestId('select-algorithm-dialog')).toBeNull();
+    });
+  });
+
+  it('should pass correct proposal to select dialog', async () => {
+    const { userEvent } = await import('@testing-library/user-event');
+
+    const { baseElement } = render(
+      <MantineProvider>
+        <ProposalList proposals={mockProposals} />
+      </MantineProvider>
+    );
+
+    const selectButtons = within(baseElement).getAllByText('Select');
+    await userEvent.click(selectButtons[0]);
+
+    await waitFor(() => {
+      const dialog = within(baseElement).getByTestId('select-algorithm-dialog');
+      expect(dialog).toBeDefined();
+    });
   });
 });
 
