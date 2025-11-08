@@ -31,14 +31,17 @@ import {
 } from '@mantine/core';
 import { DataSet } from '../../types/data';
 import { UserPreferences } from '../../types/algorithm';
+import { AnalysisResult } from '../../types/analysis';
 
 interface ProposalGenerationFormProps {
   onJobStarted?: (jobId: string) => void;
+  onAnalysisResultLoaded?: (analysisResult: AnalysisResult | null) => void;
 }
 
-export function ProposalGenerationForm({ onJobStarted }: ProposalGenerationFormProps) {
+export function ProposalGenerationForm({ onJobStarted, onAnalysisResultLoaded }: ProposalGenerationFormProps) {
   const [dataSets, setDataSets] = useState<DataSet[]>([]);
   const [selectedDataSetId, setSelectedDataSetId] = useState<number | null>(null);
+  const [analysisId, setAnalysisId] = useState<number | null>(null);
   const [riskTolerance, setRiskTolerance] = useState<'low' | 'medium' | 'high' | null>(null);
   const [tradingFrequency, setTradingFrequency] = useState<'low' | 'medium' | 'high' | null>(null);
   const [preferredIndicators, setPreferredIndicators] = useState<string[]>([]);
@@ -63,15 +66,92 @@ export function ProposalGenerationForm({ onJobStarted }: ProposalGenerationFormP
     }
   };
 
+  const handleDataSetChange = async (dataSetId: number | null) => {
+    setSelectedDataSetId(dataSetId);
+    setAnalysisId(null);
+    
+    if (onAnalysisResultLoaded) {
+      onAnalysisResultLoaded(null);
+    }
+
+    if (!dataSetId) {
+      return;
+    }
+
+    // Fetch latest analysis results for the selected data set
+    setLoading(true);
+    setError(null);
+    try {
+      const analysisResult = await invoke<AnalysisResult>('get_latest_analysis_results', {
+        data_set_id: dataSetId,
+      });
+      
+      setAnalysisId(analysisResult.id);
+      
+      if (onAnalysisResultLoaded) {
+        onAnalysisResultLoaded(analysisResult);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load analysis results';
+      setError(errorMessage);
+      
+      // If no analysis results found, show a helpful message
+      if (errorMessage.includes('No analysis results found')) {
+        setError('No analysis results found for this data set. Please run data analysis first.');
+      }
+      
+      if (onAnalysisResultLoaded) {
+        onAnalysisResultLoaded(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGenerateProposals = async () => {
     if (!selectedDataSetId) {
       setError('Please select a data set');
       return;
     }
 
-    // Phase 1: Button is disabled, this function will be implemented in Phase 3
-    // TODO: Implement in Phase 3
-    console.log('Generate proposals - to be implemented in Phase 3');
+    if (!analysisId) {
+      setError('No analysis results found for this data set. Please run data analysis first.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Build user preferences object
+      const userPreferences: UserPreferences = {};
+      if (riskTolerance) {
+        userPreferences.risk_tolerance = riskTolerance;
+      }
+      if (tradingFrequency) {
+        userPreferences.trading_frequency = tradingFrequency;
+      }
+      if (preferredIndicators.length > 0) {
+        userPreferences.preferred_indicators = preferredIndicators;
+      }
+
+      // Call generate_algorithm_proposals
+      const response = await invoke<{ job_id: string }>('generate_algorithm_proposals', {
+        data_set_id: selectedDataSetId,
+        analysis_id: analysisId,
+        num_proposals: numProposals,
+        user_preferences: Object.keys(userPreferences).length > 0 ? userPreferences : undefined,
+      });
+
+      if (onJobStarted) {
+        onJobStarted(response.job_id);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to generate proposals';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const selectOptions = dataSets.map((ds) => ({
@@ -115,7 +195,7 @@ export function ProposalGenerationForm({ onJobStarted }: ProposalGenerationFormP
           placeholder={dataSets.length === 0 ? 'No data sets available' : 'Choose a data set'}
           data={selectOptions}
           value={selectedDataSetId?.toString() || null}
-          onChange={(value) => setSelectedDataSetId(value ? parseInt(value, 10) : null)}
+          onChange={(value) => handleDataSetChange(value ? parseInt(value, 10) : null)}
           disabled={loading || dataSets.length === 0}
           searchable
         />
@@ -167,7 +247,7 @@ export function ProposalGenerationForm({ onJobStarted }: ProposalGenerationFormP
         <Button
           onClick={handleGenerateProposals}
           loading={loading}
-          disabled={!selectedDataSetId || dataSets.length === 0}
+          disabled={!selectedDataSetId || dataSets.length === 0 || !analysisId}
         >
           Generate Proposals
         </Button>

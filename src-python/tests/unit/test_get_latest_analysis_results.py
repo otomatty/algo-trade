@@ -134,8 +134,9 @@ class TestGetLatestAnalysisResults:
         
         monkeypatch.setattr('scripts.get_latest_analysis_results.get_connection', mock_get_connection)
         
-        # Run script
-        main()
+        # Run script - expect SystemExit
+        with pytest.raises(SystemExit):
+            main()
         
         # Check output
         stdout_mock.seek(0)
@@ -143,7 +144,7 @@ class TestGetLatestAnalysisResults:
         
         assert output['success'] is False
         assert 'error' in output
-        assert 'not found' in output['error'].lower()
+        assert 'no analysis results found' in output['error'].lower()
     
     def test_get_latest_analysis_results_missing_data_set_id(self, monkeypatch):
         """Test when data_set_id is missing."""
@@ -156,8 +157,9 @@ class TestGetLatestAnalysisResults:
         monkeypatch.setattr('sys.stdin', stdin_mock)
         monkeypatch.setattr('sys.stdout', stdout_mock)
         
-        # Run script
-        main()
+        # Run script - expect SystemExit
+        with pytest.raises(SystemExit):
+            main()
         
         # Check output
         stdout_mock.seek(0)
@@ -184,8 +186,9 @@ class TestGetLatestAnalysisResults:
         
         monkeypatch.setattr('scripts.get_latest_analysis_results.get_connection', mock_get_connection)
         
-        # Run script
-        main()
+        # Run script - expect SystemExit
+        with pytest.raises(SystemExit):
+            main()
         
         # Check output
         stdout_mock.seek(0)

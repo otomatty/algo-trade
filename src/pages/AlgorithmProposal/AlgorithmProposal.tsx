@@ -19,6 +19,7 @@
  *   └─ Plan: docs/03_plans/algorithm-proposal/README.md
  */
 import { useState } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import {
   Container,
   Title,
@@ -27,18 +28,43 @@ import {
 import { ProposalGenerationForm } from './ProposalGenerationForm';
 import { ProposalList } from './ProposalList';
 import { ProgressIndicator } from './ProgressIndicator';
+import { AlgorithmProposal } from '../types/algorithm';
 
 export function AlgorithmProposal() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [proposals, setProposals] = useState<AlgorithmProposal[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleJobStarted = (newJobId: string) => {
     setJobId(newJobId);
     setShowResults(false);
+    setProposals([]);
+    setError(null);
   };
 
-  const handleJobCompleted = () => {
+  const handleJobCompleted = async () => {
     setShowResults(true);
+    if (jobId) {
+      await loadProposals(jobId);
+    }
+  };
+
+  const loadProposals = async (proposalJobId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await invoke<{ proposals: AlgorithmProposal[] }>('get_algorithm_proposals', {
+        job_id: proposalJobId,
+      });
+      setProposals(response.proposals || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load proposals');
+      setProposals([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,7 +78,13 @@ export function AlgorithmProposal() {
           <ProgressIndicator jobId={jobId} onCompleted={handleJobCompleted} />
         )}
 
-        <ProposalList proposals={[]} />
+        {showResults && (
+          <ProposalList proposals={proposals} />
+        )}
+
+        {!showResults && !jobId && (
+          <ProposalList proposals={[]} />
+        )}
       </Stack>
     </Container>
   );

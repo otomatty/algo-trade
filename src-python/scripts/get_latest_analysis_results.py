@@ -39,7 +39,7 @@ def main():
         # Get latest analysis result for this data set
         # Order by created_at DESC to get the most recent one
         cursor.execute("""
-            SELECT job_id, data_set_id, analysis_summary, technical_indicators, statistics, created_at
+            SELECT id, job_id, data_set_id, analysis_summary, technical_indicators, statistics, created_at
             FROM analysis_results
             WHERE data_set_id = ?
             ORDER BY created_at DESC
@@ -53,9 +53,10 @@ def main():
             write_json_output(result)
             sys.exit(1)
         
-        job_id_db, data_set_id_db, analysis_summary_json, technical_indicators_json, statistics_json, created_at = row
+        id_db, job_id_db, data_set_id_db, analysis_summary_json, technical_indicators_json, statistics_json, created_at = row
         
         result_data = {
+            'id': id_db,
             'job_id': job_id_db,
             'data_set_id': data_set_id_db,
             'analysis_summary': json.loads(analysis_summary_json),

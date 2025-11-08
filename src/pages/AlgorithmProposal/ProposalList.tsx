@@ -8,20 +8,38 @@
  * 
  * Dependencies (External files that this file imports):
  *   ├─ @mantine/core
- *   └─ src/types/algorithm
+ *   ├─ src/types/algorithm
+ *   ├─ ./ProposalCard
+ *   └─ ./ProposalDetailModal
  * 
  * Related Documentation:
  *   ├─ Spec: src/pages/AlgorithmProposal/AlgorithmProposal.spec.md
  *   └─ Plan: docs/03_plans/algorithm-proposal/README.md
  */
-import { Paper, Text, Stack } from '@mantine/core';
+import { useState } from 'react';
+import { Paper, Text, Stack, Grid } from '@mantine/core';
 import { AlgorithmProposal as AlgorithmProposalType } from '../../types/algorithm';
+import { ProposalCard } from './ProposalCard';
+import { ProposalDetailModal } from './ProposalDetailModal';
 
 interface ProposalListProps {
   proposals: AlgorithmProposalType[];
 }
 
 export function ProposalList({ proposals }: ProposalListProps) {
+  const [selectedProposal, setSelectedProposal] = useState<AlgorithmProposalType | null>(null);
+  const [modalOpened, setModalOpened] = useState(false);
+
+  const handleViewDetails = (proposal: AlgorithmProposalType) => {
+    setSelectedProposal(proposal);
+    setModalOpened(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpened(false);
+    setSelectedProposal(null);
+  };
+
   if (proposals.length === 0) {
     return (
       <Paper p="md" withBorder>
@@ -37,14 +55,31 @@ export function ProposalList({ proposals }: ProposalListProps) {
     );
   }
 
-  // Phase 5で実装予定: 提案カードの表示
   return (
-    <Paper p="md" withBorder>
-      <Stack gap="md">
-        <Text fw={500}>Algorithm Proposals</Text>
-        {/* Phase 5で実装予定 */}
-      </Stack>
-    </Paper>
+    <>
+      <Paper p="md" withBorder>
+        <Stack gap="md">
+          <Text fw={500} size="lg">
+            Algorithm Proposals
+          </Text>
+          <Grid>
+            {proposals.map((proposal) => (
+              <Grid.Col key={proposal.proposal_id} span={{ base: 12, sm: 6, md: 4 }}>
+                <ProposalCard
+                  proposal={proposal}
+                  onViewDetails={handleViewDetails}
+                />
+              </Grid.Col>
+            ))}
+          </Grid>
+        </Stack>
+      </Paper>
+      <ProposalDetailModal
+        proposal={selectedProposal}
+        opened={modalOpened}
+        onClose={handleCloseModal}
+      />
+    </>
   );
 }
 
