@@ -42,6 +42,7 @@
     "@mantine/spotlight": "^8.3.6",
     "@mantine/tiptap": "^8.3.6",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2.4.2",
     "@tauri-apps/plugin-opener": "^2",
     "@tiptap/extension-link": "^3.10.2",
     "@tiptap/pm": "^3.10.2",

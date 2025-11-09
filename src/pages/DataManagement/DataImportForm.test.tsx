@@ -21,7 +21,7 @@ mock.module('@tauri-apps/api/core', () => ({
   invoke: mockInvoke,
 }));
 
-mock.module('@tauri-apps/api/dialog', () => ({
+mock.module('@tauri-apps/plugin-dialog', () => ({
   open: mockOpen,
 }));
 

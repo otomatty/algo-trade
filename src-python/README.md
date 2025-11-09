@@ -41,5 +41,6 @@ Create a `.env` file in the project root for API keys:
 ```
 OPENAI_API_KEY=your_key_here
 ANTHROPIC_API_KEY=your_key_here
+NEWSAPI_KEY=your_newsapi_key_here
 ```
 

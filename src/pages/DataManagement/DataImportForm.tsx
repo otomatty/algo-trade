@@ -8,7 +8,7 @@
  * 
  * Dependencies (External files that this file imports):
  *   ├─ @tauri-apps/api/core
- *   ├─ @tauri-apps/api/dialog
+ *   ├─ @tauri-apps/plugin-dialog
  *   ├─ @mantine/core
  *   └─ @mantine/dropzone
  * 
@@ -17,7 +17,7 @@
  */
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { open } from '@tauri-apps/api/dialog';
+import { open } from '@tauri-apps/plugin-dialog';
 import { 
   Button, 
   TextInput, 

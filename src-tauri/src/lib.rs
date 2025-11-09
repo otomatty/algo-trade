@@ -648,6 +648,54 @@ async fn get_selected_algorithms() -> Result<serde_json::Value, String> {
     }
 }
 
+/// Delete an algorithm from algorithms table
+#[tauri::command]
+async fn delete_algorithm(algo_id: i32) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("delete_algorithm.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "algo_id": algo_id
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
 /// Run backtest job
 #[tauri::command]
 async fn run_backtest(
@@ -855,6 +903,322 @@ async fn get_backtest_results_summary(
     }
 }
 
+/// Collect market news from RSS feeds and/or NewsAPI
+#[tauri::command]
+async fn collect_market_news(
+    use_rss: Option<bool>,
+    use_api: Option<bool>,
+    api_key: Option<String>,
+    keywords: Option<Vec<String>>,
+    max_articles: Option<i32>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("collect_market_news.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "use_rss": use_rss.unwrap_or(true),
+        "use_api": use_api.unwrap_or(false),
+        "api_key": api_key,
+        "keywords": keywords,
+        "max_articles": max_articles.unwrap_or(50)
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Get news collection job status
+#[tauri::command]
+async fn get_news_collection_status(job_id: String) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("get_news_collection_status.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "job_id": job_id
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Get collected news from database
+#[tauri::command]
+async fn get_collected_news(
+    limit: Option<i32>,
+    offset: Option<i32>,
+    source: Option<String>,
+    order_by: Option<String>,
+    order_desc: Option<bool>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("get_collected_news.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "limit": limit.unwrap_or(100),
+        "offset": offset.unwrap_or(0),
+        "source": source,
+        "order_by": order_by.unwrap_or_else(|| "published_at".to_string()),
+        "order_desc": order_desc.unwrap_or(true)
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Generate stock predictions
+#[tauri::command]
+async fn generate_stock_predictions(
+    news_job_id: Option<String>,
+    num_predictions: Option<i32>,
+    user_preferences: Option<serde_json::Value>,
+    market_trends: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("generate_stock_predictions.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "news_job_id": news_job_id,
+        "num_predictions": num_predictions.unwrap_or(5),
+        "user_preferences": user_preferences,
+        "market_trends": market_trends
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Get stock prediction generation job status
+#[tauri::command]
+async fn get_stock_prediction_status(job_id: String) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("get_stock_prediction_status.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "job_id": job_id
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Get stock predictions for a job
+#[tauri::command]
+async fn get_stock_predictions(job_id: String) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("get_stock_predictions.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "job_id": job_id
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
 fn get_python_script_path(script_name: &str) -> Result<PathBuf, String> {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     path.pop(); // Go up from src-tauri
@@ -873,6 +1237,7 @@ fn get_python_script_path(script_name: &str) -> Result<PathBuf, String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             import_ohlcv_data,
@@ -892,7 +1257,13 @@ pub fn run() {
             get_backtest_status,
             get_backtest_results,
             get_backtest_results_summary,
-            delete_algorithm
+            delete_algorithm,
+            collect_market_news,
+            get_news_collection_status,
+            get_collected_news,
+            generate_stock_predictions,
+            get_stock_prediction_status,
+            get_stock_predictions
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

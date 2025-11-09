@@ -3,9 +3,9 @@
 ## 概要
 
 本ドキュメントは、実装計画（`docs/03_plans/`）と現在の実装状況の差分を分析したものです。
-調査日: 2025年11月8日（最新更新: 2025年11月8日）
+調査日: 2025年11月8日（最新更新: 2025年11月9日）
 
-**最新更新**: ダッシュボード Phase 1-4 実装完了（2025年11月8日）
+**最新更新**: ニュース収集機能 Phase 1, 2, 4, 6 実装完了（2025年11月9日）、銘柄予測機能 Phase 4, 5, 6 実装完了（2025年11月9日）
 
 ---
 
@@ -132,19 +132,23 @@
 - **統計情報表示** (`Statistics.tsx`)
 - **Pythonスクリプト** (`run_data_analysis.py`, `get_analysis_status.py`, `get_analysis_results.py`)
 - **テストファイル** (`DataAnalysis.test.tsx`, `AnalysisJobForm.test.tsx`, `AnalysisProgress.test.tsx`, `DataAnalysisCharts.test.tsx`)
+- **Phase 6: アルゴリズム提案への遷移機能**
+  - `handleNavigateToProposal` 実装完了（`DataAnalysis.tsx`）
+  - `App.tsx`でナビゲーションパラメータ管理機能追加
+  - `AlgorithmProposal.tsx`でパラメータ受け取り機能追加
+  - `ProposalGenerationForm.tsx`で初期値設定機能追加
+  - `get_analysis_results.py`で`id`フィールドを返すように修正
+  - 仕様書更新 (`AlgorithmProposalNavigation.spec.md`)
 
 #### ❌ 未実装
-- Phase 6: アルゴリズム提案への遷移機能
-  - `handleNavigateToProposal` はTODOコメントのみ（`DataAnalysis.tsx`）
-  - `AlgorithmProposalNavigation.spec.md`は存在するが、実装は未完了（TODOコメントのみ）
-  - アルゴリズム提案機能自体は完了しているが、データ解析画面からの遷移機能は未実装
+- なし（全てのPhaseが完了）
 
 ### 差分サマリー
 
-**完了率**: 83% (5/6 Phase完了、Phase 6は部分的実装)
+**完了率**: 100% (6/6 Phase完了)
 
 **次の優先タスク**:
-1. Phase 6: アルゴリズム提案への遷移機能の実装（アルゴリズム提案機能は完了しているため、遷移機能のみ実装すれば完了）
+1. データ解析機能は完了。次はニュース収集機能の実装に着手
 
 ---
 
@@ -379,38 +383,71 @@
 
 ### 実装計画のPhase
 
-- **Phase 1: RSSフィードパーサー** ❌ **未実装**
-- **Phase 2: ニュースAPIクライアント** ❌ **未実装**
+- **Phase 1: RSSフィードパーサー** ✅ **完了** (2025年11月9日)
+- **Phase 2: ニュースAPIクライアント** ✅ **完了** (2025年11月9日)
 - **Phase 3: Webスクレイピング** ❌ **未実装**（オプション）
-- **Phase 4: ニュースデータベース保存** ❌ **未実装**
+- **Phase 4: ニュースデータベース保存** ✅ **完了** (2025年11月9日)
 - **Phase 5: センチメント分析** ❌ **未実装**（オプション）
-- **Phase 6: 自動収集スケジューラー** ❌ **未実装**
+- **Phase 6: 自動収集スケジューラー** ✅ **完了** (2025年11月9日)
 
 ### 実装状況
 
 #### ✅ 実装済み
 - モジュールディレクトリ構造 (`src-python/modules/news_collection/`)
 - 依存関係の定義 (`requirements.txt`にfeedparser, beautifulsoup4等)
+- **Phase 1: RSSフィードパーサー**
+  - `RSSFeedParser`クラス (`rss_parser.py`)
+  - 複数RSSフィードソース対応（Yahoo Finance, Reuters, Bloomberg）
+  - SSL証明書検証の回避（開発環境用）
+  - エラーハンドリングとリトライ機構
+  - 日付パース処理
+- **Phase 2: ニュースAPIクライアント**
+  - `NewsAPIClient`クラス (`news_api_client.py`)
+  - NewsAPI対応
+  - APIキー管理（環境変数、.envファイル対応）
+  - レート制限対応
+  - エラーハンドリング
+- **Phase 4: ニュースデータベース保存**
+  - `NewsCollector`クラス (`news_collector.py`)
+  - RSSとAPIから取得したニュースの統合
+  - 重複チェック（URLベース）
+  - データベース保存処理
+  - `market_news`テーブルスキーマ（`src-python/database/schema.py`）
+- **Phase 6: 自動収集スケジューラー**
+  - `NewsCollectionJobManager`クラス (`job_manager.py`)
+  - ジョブ状態管理（pending, running, completed, failed）
+  - 進捗管理
+  - エラーハンドリング
+  - `news_collection_jobs`テーブルスキーマ
+- **スクリプト実装**
+  - `collect_market_news.py` - ニュース収集実行スクリプト
+  - `get_news_collection_status.py` - 収集ジョブ状態取得スクリプト
+  - `get_collected_news.py` - 収集済みニュース取得スクリプト
+- **Tauriコマンド実装**
+  - `collect_market_news()` - ニュース収集開始
+  - `get_news_collection_status()` - 収集ジョブ状態取得
+  - `get_collected_news()` - 収集済みニュース取得
+- **テストファイル**
+  - `test_rss_parser.py` - RSSパーサーのテスト
+  - `test_news_api_client.py` - APIクライアントのテスト
+  - `test_news_collector.py` - コレクターのテスト
+  - `test_news_job_manager.py` - ジョブ管理のテスト
+- **デバッグスクリプト**
+  - `debug_news_collection.py` - ニュース収集機能のデバッグ用スクリプト
 
 #### ❌ 未実装
-- すべてのPhaseが未実装
-- RSSフィードパーサー
-- ニュースAPIクライアント（NewsAPI, Alpha Vantage等）
-- Webスクレイピング機能
-- ニュースデータベーススキーマ
-- データベース保存処理
-- 重複チェック機能
-- センチメント分析
-- 自動収集スケジューラー
+- Webスクレイピング機能（Phase 3 - オプション）
+- センチメント分析（Phase 5 - オプション）
+- APSchedulerによる自動実行機能（Phase 6の拡張機能、現在はジョブ管理のみ）
 
 ### 差分サマリー
 
-**完了率**: 0% (0/6 Phase完了、Phase 3と5はオプション)
+**完了率**: 67% (4/6 Phase完了、Phase 3と5はオプション)
 
 **次の優先タスク**:
-1. Phase 1: RSSフィードパーサーの実装
-2. Phase 2: ニュースAPIクライアントの実装
-3. Phase 4: ニュースデータベース保存の実装
+1. Phase 3: Webスクレイピングの実装（オプション、将来拡張）
+2. Phase 5: センチメント分析の実装（オプション、将来拡張）
+3. APSchedulerによる自動実行機能の実装（Phase 6の拡張）
 
 ---
 
@@ -418,12 +455,12 @@
 
 ### 実装計画のPhase
 
-- **Phase 1: ニュース収集機能（バックエンド）** ❌ **未実装**
-- **Phase 2: ニュース収集UI** ❌ **未実装**
-- **Phase 3: ニュース表示機能** ❌ **未実装**
-- **Phase 4: LLM銘柄予測生成（バックエンド）** ❌ **未実装**
-- **Phase 5: 予測生成UI** ❌ **未実装**
-- **Phase 6: 予測結果表示** ❌ **未実装**
+- **Phase 1: ニュース収集機能（バックエンド）** ✅ **完了** (2025年11月9日)
+- **Phase 2: ニュース収集UI** ✅ **完了** (2025年11月9日)
+- **Phase 3: ニュース表示機能** ✅ **完了** (2025年11月9日)
+- **Phase 4: LLM銘柄予測生成（バックエンド）** ✅ **完了** (2025年11月9日)
+- **Phase 5: 予測生成UI** ✅ **完了** (2025年11月9日)
+- **Phase 6: 予測結果表示** ✅ **完了** (2025年11月9日)
 - **Phase 7: アクション提案機能** ❌ **未実装**
 - **Phase 8: 予測履歴・精度追跡** ❌ **未実装**
 
@@ -431,26 +468,119 @@
 
 #### ✅ 実装済み
 - 型定義 (`src/types/stock-prediction.ts`, `src/types/news.ts`)
+- **Phase 1: ニュース収集機能（バックエンド）**
+  - ニュース収集機能のバックエンド実装完了（ニュース収集機能参照）
+- **Phase 2: ニュース収集UI**
+  - ニュース収集フォーム (`NewsCollectionForm.tsx`)
+  - RSSフィード/NewsAPI選択機能
+  - APIキー入力機能
+  - キーワード検索機能
+  - エラーハンドリング
+- **Phase 3: ニュース表示機能**
+  - 銘柄予測ページ (`StockPrediction.tsx`)
+  - ニュース一覧テーブル表示
+  - ニュース詳細表示（タイトル、ソース、公開日時）
+  - 外部リンク機能
+  - リフレッシュ機能
+- **Phase 4: LLM銘柄予測生成（バックエンド）**
+  - データベーススキーマ拡張 (`src-python/database/schema.py`)
+    - `stock_prediction_jobs`テーブル作成
+    - `stock_predictions`テーブル作成
+    - インデックス作成
+  - LLMスキーマ拡張 (`src-python/modules/llm_integration/schemas.py`)
+    - `AssociationStep`スキーマ追加
+    - `StockPrediction`スキーマに連想チェーンフィールド追加
+  - 予測生成モジュール (`src-python/modules/stock_prediction/prediction_generator.py`)
+    - `PredictionGenerator`クラス実装
+    - LLM連携機能
+    - ニュースサマリー整形機能
+    - 連想チェーン抽出機能
+  - ジョブ管理モジュール (`src-python/modules/stock_prediction/job_manager.py`)
+    - `StockPredictionJobManager`クラス実装
+    - ジョブ作成・状態更新機能
+    - 予測保存・取得機能
+  - Pythonスクリプト実装
+    - `generate_stock_predictions.py` - 予測生成スクリプト
+    - `get_stock_prediction_status.py` - ジョブ状態取得スクリプト
+    - `get_stock_predictions.py` - 予測結果取得スクリプト
+  - Tauriコマンド実装 (`src-tauri/src/lib.rs`)
+    - `generate_stock_predictions()` コマンド
+    - `get_stock_prediction_status()` コマンド
+    - `get_stock_predictions()` コマンド
+  - 型定義更新 (`src/types/stock-prediction.ts`)
+    - `AssociationStep`インターフェース修正
+    - 予測生成ジョブの状態型追加
+    - リクエスト・レスポンス型追加
+  - プロンプトテンプレート更新 (`src-python/modules/llm_integration/templates/stock_prediction.txt`)
+    - 連想チェーンの出力を明示的に要求するように更新
+- **Phase 5: 予測生成UI**
+  - 予測生成フォーム (`PredictionGenerationForm.tsx`)
+    - ニュースジョブIDの入力（オプション、空欄なら最新ニュースを使用）
+    - 予測数の指定（デフォルト5、範囲1-10）
+    - ユーザー設定の入力（リスク許容度、投資期間、投資スタイル）
+    - 市場トレンドの入力（テキストエリア）
+    - エラーハンドリング
+    - `generate_stock_predictions` Tauriコマンドの呼び出し
+  - 進捗表示コンポーネント (`PredictionProgress.tsx`)
+    - ジョブ状態のポーリング（2秒間隔）
+    - 進捗バーの表示（0-100%）
+    - ステータスメッセージの表示
+    - エラー表示
+    - 完了・エラー時のコールバック
+  - メインページの更新 (`StockPrediction.tsx`)
+    - 予測生成フォームと進捗表示の統合
+    - 予測生成ジョブIDの状態管理
+    - 予測生成状態の管理（idle/generating/completed/error）
+- **Phase 6: 予測結果表示**
+  - 予測カードコンポーネント (`PredictionCard.tsx`)
+    - シンボル、会社名の表示
+    - 予測方向（up/down/sideways）のバッジ表示
+    - 信頼度スコアのバッジ表示
+    - 推奨アクション（buy/sell/hold/watch）のバッジ表示
+    - 予測変化率の表示
+    - 詳細表示ボタン
+  - 予測一覧コンポーネント (`PredictionList.tsx`)
+    - グリッドレイアウト（レスポンシブ）
+    - `PredictionCard`を使用したカード表示
+    - `PredictionDetailModal`の統合
+    - 空状態の表示
+  - 予測詳細モーダル (`PredictionDetailModal.tsx`)
+    - 予測ID、信頼度、方向、アクションの表示
+    - 会社名、予測変化率、時間軸の表示
+    - 推論理由の表示
+    - リスク要因の表示
+    - 連想チェーンの表示
+    - 作成日時の表示
+  - 連想チェーン可視化コンポーネント (`AssociationChain.tsx`)
+    - ステップ番号のバッジ表示
+    - 概念と関連性の表示
+    - ステップ間の矢印表示
+    - ステップ番号でソート
+  - メインページの更新 (`StockPrediction.tsx`)
+    - 予測結果の状態管理
+    - `loadPredictions`関数の実装
+    - `handlePredictionCompleted`で予測結果を自動読み込み
+    - `PredictionList`コンポーネントの統合
+    - ローディング状態の表示
+- **ルーティング**
+  - `App.tsx`に`stock-prediction`ページを追加
+  - サイドバーに「銘柄予測」メニュー項目が存在
 
 #### ❌ 未実装
-- すべてのPhaseが未実装
-- ニュース収集機能（バックエンド）
-- ニュース収集UI
-- ニュース表示機能
-- LLM銘柄予測生成（バックエンド）
-- 予測生成UI
-- 予測結果表示
-- アクション提案機能
-- 予測履歴・精度追跡
+- Phase 7: アクション提案機能
+- Phase 8: 予測履歴・精度追跡
+- フィルタ・ソート機能の拡張
 
 ### 差分サマリー
 
-**完了率**: 0% (0/8 Phase完了)
+**完了率**: 75% (6/8 Phase完了)
 
-**依存関係**: ニュース収集機能とLLM連携機能の実装が必要
+**依存関係**: LLM連携機能の実装が必要（Phase 4以降）✅ **完了**
 
 **次の優先タスク**:
-1. ニュース収集機能とLLM連携機能の実装完了後、Phase 1から開始
+1. Phase 7: アクション提案機能の実装
+2. Phase 8: 予測履歴・精度追跡の実装
+3. フィルタ・ソート機能の拡張
 
 ---
 
@@ -462,22 +592,22 @@
 |------|----------|----------|--------|
 | データ収集（バックエンド） | 3 | 5 | 60% |
 | データ管理（フロントエンド） | 3 | 5 | 60% |
-| データ解析 | 5 | 6 | 83% |
+| データ解析 | 6 | 6 | 100% |
 | LLM連携（バックエンド） | 3 | 5 | 60% |
 | アルゴリズム提案 | 6 | 6 | 100% |
 | バックテスト | 6 | 6 | 100% |
 | ダッシュボード | 4 | 4 | 100% |
-| ニュース収集（バックエンド） | 0 | 6 | 0% |
-| 銘柄予測 | 0 | 8 | 0% |
+| ニュース収集（バックエンド） | 4 | 6 | 67% |
+| 銘柄予測 | 6 | 8 | 75% |
 
-**全体完了率**: 約61% (31/51 Phase完了)
+**全体完了率**: 約74% (40/54 Phase完了)
 
 **注意**: 上記の完了率は機能別のPhase完了率のみを計算しており、ナビゲーションシステムなどの基盤機能は含まれていない。ナビゲーションシステムはstateベースの実装が完了しており、`App.tsx`でページ間の遷移が可能になった。
 
 ### 実装優先度（推奨順序）
 
-1. **ニュース収集** - 銘柄予測の前提機能
-2. **銘柄予測** - 連想ゲーム機能
+1. **銘柄予測の拡張** - Phase 7, 8の実装（アクション提案機能、予測履歴・精度追跡）
+2. **ニュース収集の拡張** - Webスクレイピング、センチメント分析（オプション）
 3. **データ収集・管理の拡張** - Phase 4, 5の実装
 4. **LLM連携の拡張** - ストリーミング対応、コスト管理・最適化（Phase 4, 5）
 5. **データ解析の拡張** - Phase 6（アルゴリズム提案への遷移機能）
@@ -488,11 +618,12 @@
 - **ナビゲーションシステム** ✅ **実装完了** - stateベースのナビゲーションを実装。`App.tsx`でページ間の遷移が可能になった。
 
 #### バックエンド
-- ニュース収集機能
+- ニュース収集機能の拡張（Webスクレイピング、センチメント分析）
 - LLM連携の拡張機能（ストリーミング対応、コスト管理）
+- ~~LLM銘柄予測生成機能~~ ✅ **実装完了**
 
 #### フロントエンド
-- 銘柄予測UI
+- 銘柄予測UIの拡張（アクション提案機能）
 
 ### 依存関係マップ
 
@@ -503,7 +634,7 @@
     ↓                    ↓
 LLM連携 ✅ ────────────┘
     ↓
-ニュース収集 ❌ → 銘柄予測 ❌
+ニュース収集 ✅ (67%) → 銘柄予測 ✅ (75%)
     ↓
 ダッシュボード ✅（他の機能と並行実装可能）
 ```
@@ -511,19 +642,21 @@ LLM連携 ✅ ────────────┘
 ### 次のアクションアイテム
 
 1. **即座に着手すべき**:
-   - ニュース収集機能の実装（銘柄予測機能の前提）
+   - ~~LLM銘柄予測生成機能の実装（銘柄予測 Phase 4）~~ ✅ **完了**
+   - ~~予測生成UIの実装（銘柄予測 Phase 5）~~ ✅ **完了**
+   - ~~予測結果表示の実装（銘柄予測 Phase 6）~~ ✅ **完了**
 
 2. **短期（1-2週間）**:
-   - データ解析からアルゴリズム提案への遷移機能の実装（データ解析 Phase 6）
-   - ニュース収集機能の基本実装
+   - アクション提案機能の実装（銘柄予測 Phase 7）
+   - 予測履歴・精度追跡の実装（銘柄予測 Phase 8）
 
 3. **中期（1ヶ月）**:
-   - ニュース収集機能の完成
-   - 銘柄予測機能の基本実装
+   - 銘柄予測機能の完成
+   - ニュース収集機能の拡張（Webスクレイピング、センチメント分析）
 
 4. **長期（2-3ヶ月）**:
-   - ニュース収集と銘柄予測機能の完成
    - データ収集・管理の拡張機能
+   - LLM連携の拡張機能
 
 ---
 
@@ -537,6 +670,8 @@ LLM連携 ✅ ────────────┘
   - アルゴリズム提案機能の実装方法については、`docs/03_plans/algorithm-proposal/IMPLEMENTATION_GUIDE.md` を参照してください。**Phase 1-6は全て完了しています。**
   - バックテスト機能の実装方法については、`docs/03_plans/backtest/README.md` を参照してください。**Phase 1-6は全て完了しています。**
   - ダッシュボード機能の実装方法については、`docs/03_plans/dashboard/README.md` を参照してください。**Phase 1-4は全て完了しています。**
+  - ニュース収集機能の実装方法については、`docs/03_plans/news-collection/README.md` を参照してください。**Phase 1, 2, 4, 6は完了しています。**
+  - 銘柄予測機能の実装方法については、`docs/03_plans/stock-prediction/README.md` を参照してください。**Phase 1, 2, 3, 4, 5, 6は完了しています。**
 
 ## テストカバレッジ
 

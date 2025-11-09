@@ -13,6 +13,7 @@ def create_all_tables(conn: sqlite3.Connection) -> None:
         _create_data_sets_table,
         _create_ohlcv_data_table,
         _create_market_news_table,
+        _create_news_collection_jobs_table,
         _create_analysis_jobs_table,
         _create_analysis_results_table,
         _create_algorithms_table,
@@ -22,6 +23,8 @@ def create_all_tables(conn: sqlite3.Connection) -> None:
         _create_backtest_results_table,
         _create_backtest_trades_table,
         _create_backtest_equity_curve_table,
+        _create_stock_prediction_jobs_table,
+        _create_stock_predictions_table,
     ]
     
     for create_table in tables:
@@ -80,6 +83,28 @@ def _create_market_news_table(conn: sqlite3.Connection) -> None:
             keywords TEXT,  -- JSON array
             sentiment TEXT,  -- 'positive' | 'neutral' | 'negative'
             UNIQUE(url)
+        )
+    """)
+
+
+def _create_news_collection_jobs_table(conn: sqlite3.Connection) -> None:
+    """Create news_collection_jobs table."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS news_collection_jobs (
+            job_id TEXT PRIMARY KEY,
+            use_rss INTEGER DEFAULT 1,  -- Boolean: 1 = true, 0 = false
+            use_api INTEGER DEFAULT 0,
+            api_key TEXT,
+            keywords TEXT,  -- JSON array
+            max_articles INTEGER DEFAULT 50,
+            status TEXT NOT NULL,  -- 'pending' | 'running' | 'completed' | 'failed'
+            progress REAL DEFAULT 0.0,
+            message TEXT,
+            error TEXT,
+            collected_count INTEGER DEFAULT 0,
+            skipped_count INTEGER DEFAULT 0,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            completed_at TEXT
         )
     """)
 
@@ -248,6 +273,49 @@ def _create_backtest_equity_curve_table(conn: sqlite3.Connection) -> None:
     """)
 
 
+def _create_stock_prediction_jobs_table(conn: sqlite3.Connection) -> None:
+    """Create stock_prediction_jobs table."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS stock_prediction_jobs (
+            job_id TEXT PRIMARY KEY,
+            news_job_id TEXT,
+            num_predictions INTEGER DEFAULT 5,
+            user_preferences TEXT,  -- JSON
+            market_trends TEXT,  -- JSON or text
+            status TEXT NOT NULL,  -- 'pending' | 'analyzing' | 'generating' | 'completed' | 'failed'
+            progress REAL DEFAULT 0.0,
+            message TEXT,
+            error TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            completed_at TEXT,
+            FOREIGN KEY (news_job_id) REFERENCES news_collection_jobs(job_id)
+        )
+    """)
+
+
+def _create_stock_predictions_table(conn: sqlite3.Connection) -> None:
+    """Create stock_predictions table."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS stock_predictions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prediction_id TEXT UNIQUE NOT NULL,
+            job_id TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            name TEXT NOT NULL,
+            predicted_direction TEXT NOT NULL,  -- 'up' | 'down' | 'sideways'
+            predicted_change_percent REAL,
+            confidence_score REAL,
+            rationale TEXT NOT NULL,
+            association_chain TEXT,  -- JSON array
+            recommended_action TEXT NOT NULL,  -- 'buy' | 'sell' | 'hold' | 'watch'
+            risk_factors TEXT,  -- JSON array
+            time_horizon TEXT,  -- '短期' | '中期' | '長期'
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (job_id) REFERENCES stock_prediction_jobs(job_id)
+        )
+    """)
+
+
 def _create_indexes(conn: sqlite3.Connection) -> None:
     """Create database indexes for performance optimization."""
     indexes = [
@@ -258,6 +326,10 @@ def _create_indexes(conn: sqlite3.Connection) -> None:
         # Market news indexes
         "CREATE INDEX IF NOT EXISTS idx_market_news_published_at ON market_news(published_at)",
         "CREATE INDEX IF NOT EXISTS idx_market_news_source ON market_news(source)",
+        
+        # News collection indexes
+        "CREATE INDEX IF NOT EXISTS idx_news_collection_jobs_status ON news_collection_jobs(status)",
+        "CREATE INDEX IF NOT EXISTS idx_news_collection_jobs_created_at ON news_collection_jobs(created_at)",
         
         # Analysis indexes
         "CREATE INDEX IF NOT EXISTS idx_analysis_jobs_status ON analysis_jobs(status)",
@@ -274,6 +346,14 @@ def _create_indexes(conn: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_backtest_jobs_algorithm_id ON backtest_jobs(algorithm_id)",
         "CREATE INDEX IF NOT EXISTS idx_backtest_trades_job_id ON backtest_trades(job_id)",
         "CREATE INDEX IF NOT EXISTS idx_backtest_equity_job_id ON backtest_equity_curve(job_id)",
+        
+        # Stock prediction indexes
+        "CREATE INDEX IF NOT EXISTS idx_stock_prediction_jobs_status ON stock_prediction_jobs(status)",
+        "CREATE INDEX IF NOT EXISTS idx_stock_prediction_jobs_created_at ON stock_prediction_jobs(created_at)",
+        "CREATE INDEX IF NOT EXISTS idx_stock_prediction_jobs_news_job_id ON stock_prediction_jobs(news_job_id)",
+        "CREATE INDEX IF NOT EXISTS idx_stock_predictions_job_id ON stock_predictions(job_id)",
+        "CREATE INDEX IF NOT EXISTS idx_stock_predictions_prediction_id ON stock_predictions(prediction_id)",
+        "CREATE INDEX IF NOT EXISTS idx_stock_predictions_symbol ON stock_predictions(symbol)",
     ]
     
     for index_sql in indexes:

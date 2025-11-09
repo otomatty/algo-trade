@@ -112,6 +112,13 @@ class AlgorithmProposalResponse(BaseModel):
 
 # Stock Prediction Schemas
 
+class AssociationStep(BaseModel):
+    """Association step in prediction chain."""
+    step: int = Field(ge=1, description="Step number")
+    concept: str = Field(description="Concept or idea")
+    connection: str = Field(description="Connection to next step")
+
+
 class StockPrediction(BaseModel):
     """Stock prediction."""
     symbol: str = Field(description="Stock symbol code")
@@ -122,10 +129,13 @@ class StockPrediction(BaseModel):
     )
     predicted_change_percent: float = Field(description="Predicted price change percentage")
     confidence_score: float = Field(ge=0.0, le=1.0, description="Confidence score")
-    recommended_action: Literal["buy", "sell", "hold"] = Field(description="Recommended action")
+    recommended_action: Literal["buy", "sell", "hold", "watch"] = Field(description="Recommended action")
     risk_factors: List[str] = Field(default_factory=list, description="List of risk factors")
     time_horizon: Optional[Literal["短期", "中期", "長期"]] = Field(
         default=None, description="Time horizon"
+    )
+    association_chain: Optional[List[AssociationStep]] = Field(
+        default_factory=list, description="Association chain steps"
     )
 
 

@@ -4,7 +4,7 @@
  * DEPENDENCY MAP:
  * 
  * Parents (Files that import this file):
- *   └─ src/App.tsx (or future routing component)
+ *   └─ src/App.tsx (via routing)
  * 
  * Dependencies (External files that this file imports):
  *   ├─ @tauri-apps/api/core
@@ -38,10 +38,12 @@ import { BacktestProgress } from './BacktestProgress';
 import { BacktestResults } from './BacktestResults';
 
 interface BacktestSettingsProps {
+  currentPage?: string;
+  onNavigate?: (page: string) => void;
   onJobStarted?: (jobId: string) => void;
 }
 
-export function BacktestSettings({ onJobStarted }: BacktestSettingsProps) {
+export function BacktestSettings({ currentPage, onNavigate, onJobStarted }: BacktestSettingsProps) {
   const [algorithms, setAlgorithms] = useState<Algorithm[]>([]);
   const [selectedAlgorithmIds, setSelectedAlgorithmIds] = useState<number[]>([]);
   const [dataSets, setDataSets] = useState<DataSet[]>([]);

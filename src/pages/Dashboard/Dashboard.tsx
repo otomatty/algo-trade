@@ -19,10 +19,7 @@
  *   └─ Plan: docs/03_plans/dashboard/README.md
  */
 import { useEffect } from 'react';
-import { AppShell, Container, Stack, Alert } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
-import { Sidebar } from './Sidebar';
-import { Header } from './Header';
+import { Container, Stack, Alert } from '@mantine/core';
 import { AlgorithmList } from './AlgorithmList';
 import { ResultSummary } from './ResultSummary';
 import { QuickActions } from './QuickActions';
@@ -35,7 +32,6 @@ interface DashboardProps {
 }
 
 export function Dashboard({ currentPage = 'dashboard', onNavigate }: DashboardProps) {
-  const [opened, { toggle }] = useDisclosure();
   const {
     algorithms,
     backtestResults,
@@ -103,44 +99,24 @@ export function Dashboard({ currentPage = 'dashboard', onNavigate }: DashboardPr
   };
 
   return (
-    <AppShell
-      navbar={{
-        width: 250,
-        breakpoint: 'sm',
-        collapsed: { mobile: !opened },
-      }}
-      header={{ height: 60 }}
-      padding="md"
-    >
-      <AppShell.Header>
-        <Header />
-      </AppShell.Header>
-
-      <AppShell.Navbar p="md">
-        <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
-      </AppShell.Navbar>
-
-      <AppShell.Main>
-        <Container size="xl" py="md">
-          <Stack gap="md">
-            {error && (
-              <Alert color="red" title="Error">
-                {error}
-              </Alert>
-            )}
-            <QuickActions onNavigate={onNavigate} />
-            <AlgorithmList
-              algorithms={algorithms}
-              backtestResults={backtestResults}
-              loading={loading}
-              onSelect={handleSelect}
-              onDelete={handleDelete}
-            />
-            <ResultSummary results={backtestResults} loading={loading} />
-          </Stack>
-        </Container>
-      </AppShell.Main>
-    </AppShell>
+    <Container size="xl" py="md">
+      <Stack gap="md">
+        {error && (
+          <Alert color="red" title="Error">
+            {error}
+          </Alert>
+        )}
+        <QuickActions onNavigate={onNavigate} />
+        <AlgorithmList
+          algorithms={algorithms}
+          backtestResults={backtestResults}
+          loading={loading}
+          onSelect={handleSelect}
+          onDelete={handleDelete}
+        />
+        <ResultSummary results={backtestResults} loading={loading} />
+      </Stack>
+    </Container>
   );
 }
 

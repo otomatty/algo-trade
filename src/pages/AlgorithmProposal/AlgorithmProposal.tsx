@@ -4,7 +4,7 @@
  * DEPENDENCY MAP:
  * 
  * Parents (Files that import this file):
- *   └─ src/App.tsx (via routing, to be implemented)
+ *   └─ src/App.tsx (via routing)
  * 
  * Dependencies (External files that this file imports):
  *   ├─ @tauri-apps/api/core
@@ -24,16 +24,24 @@ import {
   Container,
   Title,
   Stack,
+  Alert,
+  Loader,
+  Center,
 } from '@mantine/core';
 import { ProposalGenerationForm } from './ProposalGenerationForm';
 import { ProposalList } from './ProposalList';
 import { ProgressIndicator } from './ProgressIndicator';
-import { AlgorithmProposal } from '../types/algorithm';
+import { AlgorithmProposal as AlgorithmProposalType } from '../../types/algorithm';
 
-export function AlgorithmProposal() {
+interface AlgorithmProposalProps {
+  currentPage?: string;
+  onNavigate?: (page: string) => void;
+}
+
+export function AlgorithmProposal({ currentPage: _currentPage, onNavigate: _onNavigate }: AlgorithmProposalProps) {
   const [jobId, setJobId] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [proposals, setProposals] = useState<AlgorithmProposal[]>([]);
+  const [proposals, setProposals] = useState<AlgorithmProposalType[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,7 +63,7 @@ export function AlgorithmProposal() {
     setLoading(true);
     setError(null);
     try {
-      const response = await invoke<{ proposals: AlgorithmProposal[] }>('get_algorithm_proposals', {
+      const response = await invoke<{ proposals: AlgorithmProposalType[] }>('get_algorithm_proposals', {
         job_id: proposalJobId,
       });
       setProposals(response.proposals || []);
@@ -72,17 +80,29 @@ export function AlgorithmProposal() {
       <Stack gap="md">
         <Title order={2}>Algorithm Proposal</Title>
 
+        {error && (
+          <Alert color="red" title="Error">
+            {error}
+          </Alert>
+        )}
+
         <ProposalGenerationForm onJobStarted={handleJobStarted} />
 
-        {jobId && (
+        {loading && (
+          <Center py="xl">
+            <Loader />
+          </Center>
+        )}
+
+        {jobId && !loading && (
           <ProgressIndicator jobId={jobId} onCompleted={handleJobCompleted} />
         )}
 
-        {showResults && (
+        {showResults && !loading && (
           <ProposalList proposals={proposals} />
         )}
 
-        {!showResults && !jobId && (
+        {!showResults && !jobId && !loading && (
           <ProposalList proposals={[]} />
         )}
       </Stack>

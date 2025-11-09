@@ -26,7 +26,12 @@ import { AnalysisJobForm } from './AnalysisJobForm';
 import { AnalysisProgress } from './AnalysisProgress';
 import { AnalysisResults } from './AnalysisResults';
 
-export function DataAnalysis() {
+interface DataAnalysisProps {
+  currentPage?: string;
+  onNavigate?: (page: string) => void;
+}
+
+export function DataAnalysis({ currentPage, onNavigate }: DataAnalysisProps) {
   const [jobId, setJobId] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
 
@@ -40,10 +45,11 @@ export function DataAnalysis() {
   };
 
   const handleNavigateToProposal = (analysisJobId: string) => {
-    // TODO: アルゴリズム提案機能実装後にナビゲーションを実装
-    // 現時点では準備のみ
+    // Navigate to algorithm proposal page
+    if (onNavigate) {
+      onNavigate('algorithm-proposal');
+    }
     console.log('Navigate to algorithm proposal with job ID:', analysisJobId);
-    // Example: navigate(`/algorithm-proposal?analysis_id=${analysisJobId}`);
   };
 
   return (

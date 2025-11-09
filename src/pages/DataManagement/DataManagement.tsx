@@ -33,7 +33,12 @@ import {
 import { DataSet } from '../../types/data';
 import { DataImportForm } from './DataImportForm';
 
-export function DataManagement() {
+interface DataManagementProps {
+  currentPage?: string;
+  onNavigate?: (page: string) => void;
+}
+
+export function DataManagement({ currentPage, onNavigate }: DataManagementProps) {
   const [dataSets, setDataSets] = useState<DataSet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
