@@ -46,3 +46,55 @@ export interface DataPreview {
   };
 }
 
+export interface DataCollectionSchedule {
+  schedule_id: string;
+  name: string;
+  source: 'yahoo' | 'alphavantage';
+  symbol: string;
+  start_date: string | null;
+  end_date: string | null;
+  cron_expression: string;
+  enabled: boolean;
+  api_key: string | null;
+  data_set_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DataCollectionJob {
+  job_id: string;
+  schedule_id: string | null;
+  source: 'yahoo' | 'alphavantage';
+  symbol: string;
+  start_date: string;
+  end_date: string;
+  name: string | null;
+  api_key: string | null;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  progress: number;
+  message: string | null;
+  error: string | null;
+  data_set_id: number | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface ConfigureDataCollectionRequest {
+  action: 'create' | 'update' | 'delete';
+  schedule_id?: string;
+  name?: string;
+  source?: 'yahoo' | 'alphavantage';
+  symbol?: string;
+  cron_expression?: string;
+  start_date?: string;
+  end_date?: string;
+  api_key?: string;
+  data_set_name?: string;
+  enabled?: boolean;
+}
+
+export interface ConfigureDataCollectionResponse {
+  schedule_id: string;
+}
+
+

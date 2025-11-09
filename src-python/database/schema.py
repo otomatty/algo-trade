@@ -14,6 +14,8 @@ def create_all_tables(conn: sqlite3.Connection) -> None:
         _create_ohlcv_data_table,
         _create_market_news_table,
         _create_news_collection_jobs_table,
+        _create_data_collection_schedules_table,
+        _create_data_collection_jobs_table,
         _create_analysis_jobs_table,
         _create_analysis_results_table,
         _create_algorithms_table,
@@ -364,6 +366,50 @@ def _create_prediction_actions_table(conn: sqlite3.Connection) -> None:
     """)
 
 
+def _create_data_collection_schedules_table(conn: sqlite3.Connection) -> None:
+    """Create data_collection_schedules table."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS data_collection_schedules (
+            schedule_id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            source TEXT NOT NULL,  -- 'yahoo' | 'alphavantage'
+            symbol TEXT NOT NULL,
+            start_date TEXT,
+            end_date TEXT,
+            cron_expression TEXT NOT NULL,  -- Cron expression for scheduling
+            enabled INTEGER DEFAULT 1,  -- Boolean: 1 = enabled, 0 = disabled
+            api_key TEXT,  -- Required for Alpha Vantage
+            data_set_name TEXT,  -- Optional name for the dataset
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+    """)
+
+
+def _create_data_collection_jobs_table(conn: sqlite3.Connection) -> None:
+    """Create data_collection_jobs table."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS data_collection_jobs (
+            job_id TEXT PRIMARY KEY,
+            schedule_id TEXT,
+            source TEXT NOT NULL,  -- 'yahoo' | 'alphavantage'
+            symbol TEXT NOT NULL,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            name TEXT,
+            api_key TEXT,
+            status TEXT NOT NULL,  -- 'pending' | 'running' | 'completed' | 'failed'
+            progress REAL DEFAULT 0.0,
+            message TEXT,
+            error TEXT,
+            data_set_id INTEGER,  -- Reference to created data_set
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            completed_at TEXT,
+            FOREIGN KEY (schedule_id) REFERENCES data_collection_schedules(schedule_id)
+        )
+    """)
+
+
 def _create_indexes(conn: sqlite3.Connection) -> None:
     """Create database indexes for performance optimization."""
     indexes = [
@@ -406,6 +452,13 @@ def _create_indexes(conn: sqlite3.Connection) -> None:
         # Prediction actions indexes
         "CREATE INDEX IF NOT EXISTS idx_prediction_actions_prediction_id ON prediction_actions(prediction_id)",
         "CREATE INDEX IF NOT EXISTS idx_prediction_actions_created_at ON prediction_actions(created_at)",
+        
+        # Data collection indexes
+        "CREATE INDEX IF NOT EXISTS idx_data_collection_schedules_enabled ON data_collection_schedules(enabled)",
+        "CREATE INDEX IF NOT EXISTS idx_data_collection_schedules_symbol ON data_collection_schedules(symbol)",
+        "CREATE INDEX IF NOT EXISTS idx_data_collection_jobs_status ON data_collection_jobs(status)",
+        "CREATE INDEX IF NOT EXISTS idx_data_collection_jobs_schedule_id ON data_collection_jobs(schedule_id)",
+        "CREATE INDEX IF NOT EXISTS idx_data_collection_jobs_created_at ON data_collection_jobs(created_at)",
     ]
     
     for index_sql in indexes:

@@ -1116,6 +1116,313 @@ async fn get_collected_news(
     }
 }
 
+/// Configure data collection schedule
+#[tauri::command]
+async fn configure_data_collection(
+    action: String,
+    schedule_id: Option<String>,
+    name: Option<String>,
+    source: Option<String>,
+    symbol: Option<String>,
+    cron_expression: Option<String>,
+    start_date: Option<String>,
+    end_date: Option<String>,
+    api_key: Option<String>,
+    data_set_name: Option<String>,
+    enabled: Option<bool>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("configure_data_collection.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let mut input = serde_json::json!({
+        "action": action
+    });
+    
+    if let Some(id) = schedule_id {
+        input["schedule_id"] = serde_json::Value::String(id);
+    }
+    if let Some(n) = name {
+        input["name"] = serde_json::Value::String(n);
+    }
+    if let Some(s) = source {
+        input["source"] = serde_json::Value::String(s);
+    }
+    if let Some(s) = symbol {
+        input["symbol"] = serde_json::Value::String(s);
+    }
+    if let Some(c) = cron_expression {
+        input["cron_expression"] = serde_json::Value::String(c);
+    }
+    if let Some(s) = start_date {
+        input["start_date"] = serde_json::Value::String(s);
+    }
+    if let Some(e) = end_date {
+        input["end_date"] = serde_json::Value::String(e);
+    }
+    if let Some(k) = api_key {
+        input["api_key"] = serde_json::Value::String(k);
+    }
+    if let Some(d) = data_set_name {
+        input["data_set_name"] = serde_json::Value::String(d);
+    }
+    if let Some(e) = enabled {
+        input["enabled"] = serde_json::Value::Bool(e);
+    }
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Get data collection schedules
+#[tauri::command]
+async fn get_data_collection_schedules(
+    enabled_only: Option<bool>,
+    schedule_id: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("get_data_collection_schedules.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let mut input = serde_json::json!({});
+    if let Some(e) = enabled_only {
+        input["enabled_only"] = serde_json::Value::Bool(e);
+    }
+    if let Some(id) = schedule_id {
+        input["schedule_id"] = serde_json::Value::String(id);
+    }
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Get data collection job status
+#[tauri::command]
+async fn get_data_collection_status(
+    job_id: Option<String>,
+    schedule_id: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("get_data_collection_status.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let mut input = serde_json::json!({});
+    if let Some(id) = job_id {
+        input["job_id"] = serde_json::Value::String(id);
+    }
+    if let Some(id) = schedule_id {
+        input["schedule_id"] = serde_json::Value::String(id);
+    }
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Update dataset with new data
+#[tauri::command]
+async fn update_data_set(
+    data_set_id: i32,
+    start_date: Option<String>,
+    end_date: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("update_data_set.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let mut input = serde_json::json!({
+        "data_set_id": data_set_id
+    });
+    if let Some(s) = start_date {
+        input["start_date"] = serde_json::Value::String(s);
+    }
+    if let Some(e) = end_date {
+        input["end_date"] = serde_json::Value::String(e);
+    }
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Check data integrity
+#[tauri::command]
+async fn check_data_integrity(data_set_id: i32) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("check_data_integrity.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "data_set_id": data_set_id
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
 /// Generate stock predictions
 #[tauri::command]
 async fn generate_stock_predictions(
@@ -1480,7 +1787,12 @@ pub fn run() {
             get_stock_predictions,
             save_prediction_action,
             get_prediction_history,
-            update_prediction_accuracy
+            update_prediction_accuracy,
+            configure_data_collection,
+            get_data_collection_schedules,
+            get_data_collection_status,
+            update_data_set,
+            check_data_integrity
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

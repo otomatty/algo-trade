@@ -12,7 +12,9 @@
  *   ├─ @mantine/dropzone
  *   ├─ src/types/data
  *   ├─ ./DataImportForm
- *   └─ ./DataPreviewModal
+ *   ├─ ./DataPreviewModal
+ *   ├─ ./APIConfigForm
+ *   └─ ./ScheduleList
  * 
  * Related Documentation:
  *   ├─ Plan: docs/03_plans/data-management/README.md
@@ -29,11 +31,14 @@ import {
   Group, 
   Text,
   Paper,
-  Stack
+  Stack,
+  Tabs
 } from '@mantine/core';
-import { DataSet } from '../../types/data';
+import { DataSet, DataCollectionSchedule } from '../../types/data';
 import { DataImportForm } from './DataImportForm';
 import { DataPreviewModal } from './DataPreviewModal';
+import { APIConfigForm } from './APIConfigForm';
+import { ScheduleList } from './ScheduleList';
 
 interface DataManagementProps {
   currentPage?: string;
@@ -46,6 +51,8 @@ export function DataManagement({ currentPage, onNavigate }: DataManagementProps)
   const [error, setError] = useState<string | null>(null);
   const [previewDataSet, setPreviewDataSet] = useState<DataSet | null>(null);
   const [previewOpened, setPreviewOpened] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState<DataCollectionSchedule | null>(null);
+  const [scheduleRefreshKey, setScheduleRefreshKey] = useState(0);
 
   const loadDataSets = async () => {
     setLoading(true);
@@ -86,11 +93,32 @@ export function DataManagement({ currentPage, onNavigate }: DataManagementProps)
     loadDataSets();
   };
 
+  const handleScheduleSuccess = () => {
+    setScheduleRefreshKey((prev) => prev + 1);
+    setEditingSchedule(null);
+  };
+
+  const handleEditSchedule = (schedule: DataCollectionSchedule) => {
+    setEditingSchedule(schedule);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSchedule(null);
+  };
+
   return (
     <Container size="xl" py="md">
       <Stack gap="md">
         <Title order={2}>Data Management</Title>
 
+        <Tabs defaultValue="datasets">
+          <Tabs.List>
+            <Tabs.Tab value="datasets">Data Sets</Tabs.Tab>
+            <Tabs.Tab value="schedules">Collection Schedules</Tabs.Tab>
+          </Tabs.List>
+
+          <Tabs.Panel value="datasets">
+            <Stack gap="md">
         <Paper p="md" withBorder>
           <DataImportForm onSuccess={handleImportSuccess} />
         </Paper>
@@ -161,6 +189,26 @@ export function DataManagement({ currentPage, onNavigate }: DataManagementProps)
             </Text>
           )}
         </Paper>
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="schedules">
+            <Stack gap="md">
+              <APIConfigForm
+                onSuccess={handleScheduleSuccess}
+                editingSchedule={editingSchedule}
+                onCancel={handleCancelEdit}
+              />
+
+              <Paper p="md" withBorder>
+                <ScheduleList
+                  onEdit={handleEditSchedule}
+                  onRefresh={scheduleRefreshKey}
+                />
+              </Paper>
+            </Stack>
+          </Tabs.Panel>
+        </Tabs>
       </Stack>
 
       <DataPreviewModal
