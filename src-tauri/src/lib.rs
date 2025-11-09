@@ -205,6 +205,55 @@ async fn delete_data_set(data_set_id: i32) -> Result<serde_json::Value, String> 
     }
 }
 
+/// Get data preview for a data set
+#[tauri::command]
+async fn get_data_preview(data_set_id: i32, limit: Option<u32>) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("get_data_preview.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "data_set_id": data_set_id,
+        "limit": limit.unwrap_or(100)
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
 /// Run data analysis job
 #[tauri::command]
 async fn run_data_analysis(data_set_id: i32) -> Result<serde_json::Value, String> {
@@ -1408,6 +1457,7 @@ pub fn run() {
             collect_from_api,
             get_data_list,
             delete_data_set,
+            get_data_preview,
             run_data_analysis,
             get_analysis_status,
             get_analysis_results,

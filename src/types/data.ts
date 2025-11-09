@@ -29,3 +29,20 @@ export interface OHLCVData {
   volume: number;
 }
 
+export interface DataPreview {
+  data_set_id: number;
+  data: OHLCVData[];
+  statistics: {
+    count: number;
+    date_range: {
+      start: string;
+      end: string;
+    };
+    open: { mean: number; min: number; max: number; std: number };
+    high: { mean: number; min: number; max: number; std: number };
+    low: { mean: number; min: number; max: number; std: number };
+    close: { mean: number; min: number; max: number; std: number };
+    volume: { mean: number; min: number; max: number; std: number };
+  };
+}
+

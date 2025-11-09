@@ -11,7 +11,8 @@
  *   ├─ @mantine/core
  *   ├─ @mantine/dropzone
  *   ├─ src/types/data
- *   └─ ./DataImportForm
+ *   ├─ ./DataImportForm
+ *   └─ ./DataPreviewModal
  * 
  * Related Documentation:
  *   ├─ Plan: docs/03_plans/data-management/README.md
@@ -32,6 +33,7 @@ import {
 } from '@mantine/core';
 import { DataSet } from '../../types/data';
 import { DataImportForm } from './DataImportForm';
+import { DataPreviewModal } from './DataPreviewModal';
 
 interface DataManagementProps {
   currentPage?: string;
@@ -42,6 +44,8 @@ export function DataManagement({ currentPage, onNavigate }: DataManagementProps)
   const [dataSets, setDataSets] = useState<DataSet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewDataSet, setPreviewDataSet] = useState<DataSet | null>(null);
+  const [previewOpened, setPreviewOpened] = useState(false);
 
   const loadDataSets = async () => {
     setLoading(true);
@@ -71,6 +75,11 @@ export function DataManagement({ currentPage, onNavigate }: DataManagementProps)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete data set');
     }
+  };
+
+  const handlePreview = (dataSet: DataSet) => {
+    setPreviewDataSet(dataSet);
+    setPreviewOpened(true);
   };
 
   const handleImportSuccess = () => {
@@ -124,13 +133,22 @@ export function DataManagement({ currentPage, onNavigate }: DataManagementProps)
                   <Table.Td>{dataSet.record_count}</Table.Td>
                   <Table.Td>{dataSet.source}</Table.Td>
                   <Table.Td>
-                    <Button
-                      size="xs"
-                      color="red"
-                      onClick={() => handleDelete(dataSet.id)}
-                    >
-                      Delete
-                    </Button>
+                    <Group gap="xs">
+                      <Button
+                        size="xs"
+                        variant="light"
+                        onClick={() => handlePreview(dataSet)}
+                      >
+                        Preview
+                      </Button>
+                      <Button
+                        size="xs"
+                        color="red"
+                        onClick={() => handleDelete(dataSet.id)}
+                      >
+                        Delete
+                      </Button>
+                    </Group>
                   </Table.Td>
                 </Table.Tr>
               ))}
@@ -144,7 +162,17 @@ export function DataManagement({ currentPage, onNavigate }: DataManagementProps)
           )}
         </Paper>
       </Stack>
+
+      <DataPreviewModal
+        dataSet={previewDataSet}
+        opened={previewOpened}
+        onClose={() => {
+          setPreviewOpened(false);
+          setPreviewDataSet(null);
+        }}
+      />
     </Container>
   );
 }
+
 
