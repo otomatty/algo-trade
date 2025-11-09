@@ -12,6 +12,7 @@ import { DataAnalysis } from './pages/DataAnalysis/DataAnalysis';
 import { StockPrediction } from './pages/StockPrediction/StockPrediction';
 import { Sidebar } from './pages/Dashboard/Sidebar';
 import { Header } from './pages/Dashboard/Header';
+import './i18n';
 import "./App.css";
 
 function App() {

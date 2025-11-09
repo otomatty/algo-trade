@@ -1,0 +1,23 @@
+{
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "submit": "Submit",
+    "refresh": "Refresh"
+  },
+  "labels": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning"
+  },
+  "messages": {
+    "confirmDelete": "Are you sure you want to delete?",
+    "operationSuccess": "Operation completed successfully",
+    "operationFailed": "Operation failed"
+  }
+}
+

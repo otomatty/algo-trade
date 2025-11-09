@@ -8,13 +8,15 @@
  * 
  * Dependencies (External files that this file imports):
  *   ├─ @mantine/core
- *   └─ @mantine/hooks (for navigation state)
+ *   ├─ @mantine/hooks (for navigation state)
+ *   └─ react-i18next
  * 
  * Related Documentation:
  *   ├─ Spec: src/pages/Dashboard/Dashboard.spec.md
  *   └─ Plan: docs/03_plans/dashboard/README.md
  */
 import { NavLink } from '@mantine/core';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
   currentPage?: string;
@@ -22,13 +24,15 @@ interface SidebarProps {
 }
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps) {
+  const { t } = useTranslation('navigation');
+  
   const navItems = [
-    { label: 'ダッシュボード', page: 'dashboard' },
-    { label: 'アルゴリズム提案', page: 'algorithm-proposal' },
-    { label: 'バックテスト', page: 'backtest' },
-    { label: 'データ管理', page: 'data-management' },
-    { label: 'データ解析', page: 'data-analysis' },
-    { label: '銘柄予測', page: 'stock-prediction' },
+    { label: t('dashboard'), page: 'dashboard' },
+    { label: t('algorithmProposal'), page: 'algorithm-proposal' },
+    { label: t('backtest'), page: 'backtest' },
+    { label: t('dataManagement'), page: 'data-management' },
+    { label: t('dataAnalysis'), page: 'data-analysis' },
+    { label: t('stockPrediction'), page: 'stock-prediction' },
   ];
 
   const handleClick = (page: string) => {
