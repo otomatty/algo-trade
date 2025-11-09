@@ -6,18 +6,136 @@
     "edit": "Edit",
     "close": "Close",
     "submit": "Submit",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "create": "Create",
+    "update": "Update",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "export": "Export",
+    "import": "Import"
   },
   "labels": {
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
-    "warning": "Warning"
+    "warning": "Warning",
+    "name": "Name",
+    "email": "Email",
+    "date": "Date",
+    "time": "Time",
+    "status": "Status",
+    "actions": "Actions",
+    "description": "Description",
+    "required": "Required"
   },
   "messages": {
     "confirmDelete": "Are you sure you want to delete?",
     "operationSuccess": "Operation completed successfully",
-    "operationFailed": "Operation failed"
+    "operationFailed": "Operation failed",
+    "networkError": "Network error occurred",
+    "validationError": "Invalid input value",
+    "notFound": "Not found",
+    "noData": "No data available",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "deleting": "Deleting...",
+    "deleted": "Deleted"
+  },
+  "forms": {
+    "placeholders": {
+      "enterText": "Enter text",
+      "selectOption": "Select an option",
+      "enterDate": "Select a date",
+      "enterEmail": "Enter email address",
+      "enterNumber": "Enter a number",
+      "search": "Search..."
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalidEmail": "Please enter a valid email address",
+      "invalidNumber": "Please enter a valid number",
+      "minLength": "Please enter at least {{min}} characters",
+      "maxLength": "Please enter no more than {{max}} characters",
+      "pattern": "Please enter in the correct format"
+    }
+  },
+  "tables": {
+    "headers": {
+      "name": "Name",
+      "date": "Date",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "sort": {
+      "asc": "Ascending",
+      "desc": "Descending",
+      "none": "No sort"
+    },
+    "filter": {
+      "all": "All",
+      "filter": "Filter",
+      "clear": "Clear",
+      "apply": "Apply"
+    },
+    "pagination": {
+      "page": "Page",
+      "of": "of",
+      "items": "items",
+      "perPage": "per page",
+      "showing": "Showing",
+      "to": "to",
+      "total": "Total"
+    }
+  },
+  "modals": {
+    "titles": {
+      "confirm": "Confirm",
+      "error": "Error",
+      "success": "Success",
+      "warning": "Warning",
+      "info": "Information"
+    },
+    "messages": {
+      "confirmAction": "Are you sure you want to perform this action?",
+      "unsavedChanges": "You have unsaved changes. Do you want to continue?"
+    }
+  },
+  "status": {
+    "pending": "Pending",
+    "running": "Running",
+    "completed": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
+    "success": "Success",
+    "error": "Error",
+    "active": "Active",
+    "inactive": "Inactive",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "dateTime": {
+    "formats": {
+      "date": "MMMM DD, YYYY",
+      "time": "HH:mm",
+      "dateTime": "MMMM DD, YYYY HH:mm",
+      "shortDate": "MM/DD",
+      "longDate": "dddd, MMMM DD, YYYY"
+    },
+    "labels": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "tomorrow": "Tomorrow",
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "thisYear": "This year",
+      "lastYear": "Last year"
+    }
   }
 }
 

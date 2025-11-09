@@ -6,18 +6,136 @@
     "edit": "編集",
     "close": "閉じる",
     "submit": "送信",
-    "refresh": "更新"
+    "refresh": "更新",
+    "create": "作成",
+    "update": "更新",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "search": "検索",
+    "filter": "フィルタ",
+    "reset": "リセット",
+    "export": "エクスポート",
+    "import": "インポート"
   },
   "labels": {
     "loading": "読み込み中...",
     "error": "エラー",
     "success": "成功",
-    "warning": "警告"
+    "warning": "警告",
+    "name": "名前",
+    "email": "メールアドレス",
+    "date": "日付",
+    "time": "時刻",
+    "status": "ステータス",
+    "actions": "操作",
+    "description": "説明",
+    "required": "必須"
   },
   "messages": {
     "confirmDelete": "削除してもよろしいですか？",
     "operationSuccess": "操作が正常に完了しました",
-    "operationFailed": "操作に失敗しました"
+    "operationFailed": "操作に失敗しました",
+    "networkError": "ネットワークエラーが発生しました",
+    "validationError": "入力値が正しくありません",
+    "notFound": "見つかりませんでした",
+    "noData": "データがありません",
+    "saving": "保存中...",
+    "saved": "保存しました",
+    "deleting": "削除中...",
+    "deleted": "削除しました"
+  },
+  "forms": {
+    "placeholders": {
+      "enterText": "テキストを入力してください",
+      "selectOption": "選択してください",
+      "enterDate": "日付を選択してください",
+      "enterEmail": "メールアドレスを入力してください",
+      "enterNumber": "数値を入力してください",
+      "search": "検索..."
+    },
+    "validation": {
+      "required": "この項目は必須です",
+      "invalidEmail": "有効なメールアドレスを入力してください",
+      "invalidNumber": "有効な数値を入力してください",
+      "minLength": "{{min}}文字以上入力してください",
+      "maxLength": "{{max}}文字以下で入力してください",
+      "pattern": "正しい形式で入力してください"
+    }
+  },
+  "tables": {
+    "headers": {
+      "name": "名前",
+      "date": "日付",
+      "status": "ステータス",
+      "actions": "操作"
+    },
+    "sort": {
+      "asc": "昇順",
+      "desc": "降順",
+      "none": "ソートなし"
+    },
+    "filter": {
+      "all": "全て",
+      "filter": "フィルタ",
+      "clear": "クリア",
+      "apply": "適用"
+    },
+    "pagination": {
+      "page": "ページ",
+      "of": "/",
+      "items": "件",
+      "perPage": "1ページあたり",
+      "showing": "表示中",
+      "to": "〜",
+      "total": "合計"
+    }
+  },
+  "modals": {
+    "titles": {
+      "confirm": "確認",
+      "error": "エラー",
+      "success": "成功",
+      "warning": "警告",
+      "info": "情報"
+    },
+    "messages": {
+      "confirmAction": "この操作を実行してもよろしいですか？",
+      "unsavedChanges": "保存されていない変更があります。続行しますか？"
+    }
+  },
+  "status": {
+    "pending": "待機中",
+    "running": "実行中",
+    "completed": "完了",
+    "failed": "失敗",
+    "cancelled": "キャンセル済み",
+    "success": "成功",
+    "error": "エラー",
+    "active": "有効",
+    "inactive": "無効",
+    "enabled": "有効",
+    "disabled": "無効"
+  },
+  "dateTime": {
+    "formats": {
+      "date": "YYYY年MM月DD日",
+      "time": "HH:mm",
+      "dateTime": "YYYY年MM月DD日 HH:mm",
+      "shortDate": "MM/DD",
+      "longDate": "YYYY年MM月DD日(ddd)"
+    },
+    "labels": {
+      "today": "今日",
+      "yesterday": "昨日",
+      "tomorrow": "明日",
+      "thisWeek": "今週",
+      "lastWeek": "先週",
+      "thisMonth": "今月",
+      "lastMonth": "先月",
+      "thisYear": "今年",
+      "lastYear": "去年"
+    }
   }
 }
 

@@ -195,9 +195,115 @@ test('translation keys exist', () => {
    - 翻訳の品質を確認
    - 命名規則に従っているか確認
 
+## コードレビューガイドライン
+
+### レビュー時の確認ポイント
+
+コードレビュー時には、以下の観点から国際化対応を確認してください。
+
+#### 1. ハードコードされたテキストの検出
+
+**確認方法**:
+- コンポーネント内で日本語や英語の文字列リテラルを検索
+- JSX内の `"` や `'` で囲まれたテキストを確認
+- コメント以外の文字列リテラルが存在しないか確認
+
+**検出例**:
+```typescript
+// ❌ 悪い例
+<Button>保存</Button>
+<Text>エラーが発生しました</Text>
+
+// ✅ 良い例
+<Button>{t('buttons.save')}</Button>
+<Text>{t('messages.error')}</Text>
+```
+
+#### 2. 翻訳キーの命名規則チェック
+
+**確認項目**:
+- camelCase で命名されているか
+- 意味が明確か（`text1`, `label` などの曖昧な名前ではないか）
+- 階層構造を適切に使用しているか
+- 既存の翻訳キーと重複していないか
+
+**チェック例**:
+```typescript
+// ❌ 悪い例
+t('text1')
+t('label')
+t('button')
+
+// ✅ 良い例
+t('dashboard.title')
+t('buttons.save')
+t('labels.loading')
+```
+
+#### 3. 名前空間の適切な使用
+
+**確認項目**:
+- 適切な名前空間を選択しているか
+- `common` 名前空間の再利用可能なキーを使用しているか
+- 複数の名前空間を使用する場合は、適切に使い分けているか
+
+**チェック例**:
+```typescript
+// ❌ 悪い例
+// 共通ボタンを機能別名前空間に定義
+const { t } = useTranslation('dashboard');
+<Button>{t('save')}</Button> // common を使うべき
+
+// ✅ 良い例
+// 共通ボタンは common を使用
+const { t } = useTranslation(['common', 'dashboard']);
+<Button>{t('common:buttons.save')}</Button>
+<h1>{t('dashboard:title')}</h1>
+```
+
+#### 4. 翻訳ファイルの構造チェック
+
+**確認項目**:
+- 日本語と英語の翻訳ファイルの構造が一致しているか
+- 全ての翻訳キーが両方の言語ファイルに存在するか
+- JSON構造が適切か（階層構造の使用）
+
+**チェック例**:
+```json
+// ❌ 悪い例 - 構造が不一致
+// ja/dashboard.json
+{ "title": "ダッシュボード" }
+
+// en/dashboard.json
+{ "dashboard": { "title": "Dashboard" } }
+
+// ✅ 良い例 - 構造が一致
+// ja/dashboard.json
+{ "title": "ダッシュボード" }
+
+// en/dashboard.json
+{ "title": "Dashboard" }
+```
+
+#### 5. i18n設定の確認
+
+**確認項目**:
+- `src/i18n/index.ts` に新しい名前空間が追加されているか
+- `ns` 配列に名前空間が追加されているか
+- 型定義ファイルが更新されているか（必要に応じて）
+
+#### 6. テストでの国際化対応確認
+
+**確認項目**:
+- テストファイルで `I18nextProvider` を使用しているか
+- 翻訳キーの存在確認テストがあるか
+- 言語切り替えのテストがあるか（必要に応じて）
+
 ## 参考資料
 
 - [react-i18next公式ドキュメント](https://react.i18next.com/)
 - [i18next公式ドキュメント](https://www.i18next.com/)
 - テンプレート: `docs/rules/i18n-template.md`
+- チェックリスト: `docs/rules/i18n-checklist.md`
+- ワークフロー: `docs/rules/i18n-workflow.md`
 
