@@ -1219,6 +1219,170 @@ async fn get_stock_predictions(job_id: String) -> Result<serde_json::Value, Stri
     }
 }
 
+/// Save a user's action for a stock prediction
+#[tauri::command]
+async fn save_prediction_action(
+    prediction_id: String,
+    action: String,
+    notes: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("save_prediction_action.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "prediction_id": prediction_id,
+        "action": action,
+        "notes": notes
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Get prediction history with filtering and accuracy statistics
+#[tauri::command]
+async fn get_prediction_history(
+    limit: Option<u32>,
+    start_date: Option<String>,
+    end_date: Option<String>,
+    symbol: Option<String>,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("get_prediction_history.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "limit": limit,
+        "start_date": start_date,
+        "end_date": end_date,
+        "symbol": symbol
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
+/// Update prediction accuracy with actual results
+#[tauri::command]
+async fn update_prediction_accuracy(
+    prediction_id: String,
+    actual_price: f64,
+    actual_direction: String,
+) -> Result<serde_json::Value, String> {
+    let script_path = get_python_script_path("update_prediction_accuracy.py")?;
+    
+    let mut cmd = AsyncCommand::new("python3");
+    cmd.arg(&script_path);
+    cmd.stdin(std::process::Stdio::piped());
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    
+    let input = serde_json::json!({
+        "prediction_id": prediction_id,
+        "actual_price": actual_price,
+        "actual_direction": actual_direction
+    });
+    
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| format!("Failed to spawn Python process: {}", e))?;
+    
+    // Write input to stdin
+    if let Some(mut stdin) = child.stdin.take() {
+        use tokio::io::AsyncWriteExt;
+        stdin.write_all(input.to_string().as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to stdin: {}", e))?;
+    }
+    
+    let output = child
+        .wait_with_output()
+        .await
+        .map_err(|e| format!("Failed to wait for Python process: {}", e))?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("Python script failed: {}", stderr));
+    }
+    
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let response: PythonResponse = serde_json::from_str(&stdout)
+        .map_err(|e| format!("Failed to parse Python response: {}", e))?;
+    
+    if response.success {
+        Ok(response.data.unwrap_or(serde_json::Value::Null))
+    } else {
+        Err(response.error.unwrap_or_else(|| "Unknown error".to_string()))
+    }
+}
+
 fn get_python_script_path(script_name: &str) -> Result<PathBuf, String> {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     path.pop(); // Go up from src-tauri
@@ -1263,7 +1427,10 @@ pub fn run() {
             get_collected_news,
             generate_stock_predictions,
             get_stock_prediction_status,
-            get_stock_predictions
+            get_stock_predictions,
+            save_prediction_action,
+            get_prediction_history,
+            update_prediction_accuracy
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

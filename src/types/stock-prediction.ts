@@ -57,3 +57,59 @@ export interface GetStockPredictionsResponse {
   predictions: StockPrediction[];
 }
 
+// Phase 7: Action Proposal Types
+export interface SavePredictionActionRequest {
+  prediction_id: string;
+  action: 'buy' | 'sell' | 'hold' | 'watch' | 'ignore';
+  notes?: string;
+}
+
+export interface SavePredictionActionResponse {
+  action_id: number;
+  prediction_id: string;
+  action: 'buy' | 'sell' | 'hold' | 'watch' | 'ignore';
+}
+
+// Phase 8: Prediction History & Accuracy Tracking Types
+export interface GetPredictionHistoryRequest {
+  limit?: number;
+  start_date?: string;
+  end_date?: string;
+  symbol?: string;
+}
+
+export interface PredictionHistory {
+  prediction_id: string;
+  symbol: string;
+  predicted_direction: 'up' | 'down' | 'sideways';
+  predicted_at: string;
+  actual_direction?: 'up' | 'down' | 'sideways';
+  actual_change_percent?: number;
+  accuracy?: boolean;
+  user_action?: 'buy' | 'sell' | 'hold' | 'watch' | 'ignore';
+  reasoning: string;
+}
+
+export interface AccuracyStats {
+  total_predictions: number;
+  correct_predictions: number;
+  accuracy_rate: number;
+}
+
+export interface GetPredictionHistoryResponse {
+  predictions: PredictionHistory[];
+  accuracy_stats?: AccuracyStats;
+}
+
+export interface UpdatePredictionAccuracyRequest {
+  prediction_id: string;
+  actual_price: number;
+  actual_direction: 'up' | 'down' | 'sideways';
+}
+
+export interface UpdatePredictionAccuracyResponse {
+  success: boolean;
+  accuracy_updated: boolean;
+}
+
+

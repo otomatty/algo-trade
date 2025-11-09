@@ -37,6 +37,7 @@ import { NewsCollectionForm } from './NewsCollectionForm';
 import { PredictionGenerationForm } from './PredictionGenerationForm';
 import { PredictionProgress } from './PredictionProgress';
 import { PredictionList } from './PredictionList';
+import { PredictionHistory } from './PredictionHistory';
 
 interface StockPredictionProps {
   currentPage?: string;
@@ -210,6 +211,8 @@ export function StockPrediction({ currentPage, onNavigate }: StockPredictionProp
             </Text>
           )}
         </Paper>
+
+        <PredictionHistory />
       </Stack>
     </Container>
   );

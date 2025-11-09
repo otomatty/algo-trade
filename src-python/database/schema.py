@@ -25,6 +25,7 @@ def create_all_tables(conn: sqlite3.Connection) -> None:
         _create_backtest_equity_curve_table,
         _create_stock_prediction_jobs_table,
         _create_stock_predictions_table,
+        _create_prediction_actions_table,
     ]
     
     for create_table in tables:
@@ -314,6 +315,53 @@ def _create_stock_predictions_table(conn: sqlite3.Connection) -> None:
             FOREIGN KEY (job_id) REFERENCES stock_prediction_jobs(job_id)
         )
     """)
+    
+    # Add Phase 8 accuracy tracking columns if they don't exist
+    try:
+        conn.execute("""
+            ALTER TABLE stock_predictions 
+            ADD COLUMN actual_direction TEXT
+        """)
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
+    try:
+        conn.execute("""
+            ALTER TABLE stock_predictions 
+            ADD COLUMN actual_change_percent REAL
+        """)
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
+    try:
+        conn.execute("""
+            ALTER TABLE stock_predictions 
+            ADD COLUMN accuracy INTEGER
+        """)
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+    
+    try:
+        conn.execute("""
+            ALTER TABLE stock_predictions 
+            ADD COLUMN accuracy_updated_at TEXT
+        """)
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
+
+def _create_prediction_actions_table(conn: sqlite3.Connection) -> None:
+    """Create prediction_actions table."""
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS prediction_actions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            prediction_id TEXT UNIQUE NOT NULL,
+            action TEXT NOT NULL,  -- 'buy' | 'sell' | 'hold' | 'watch' | 'ignore'
+            notes TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (prediction_id) REFERENCES stock_predictions(prediction_id)
+        )
+    """)
 
 
 def _create_indexes(conn: sqlite3.Connection) -> None:
@@ -354,6 +402,10 @@ def _create_indexes(conn: sqlite3.Connection) -> None:
         "CREATE INDEX IF NOT EXISTS idx_stock_predictions_job_id ON stock_predictions(job_id)",
         "CREATE INDEX IF NOT EXISTS idx_stock_predictions_prediction_id ON stock_predictions(prediction_id)",
         "CREATE INDEX IF NOT EXISTS idx_stock_predictions_symbol ON stock_predictions(symbol)",
+        
+        # Prediction actions indexes
+        "CREATE INDEX IF NOT EXISTS idx_prediction_actions_prediction_id ON prediction_actions(prediction_id)",
+        "CREATE INDEX IF NOT EXISTS idx_prediction_actions_created_at ON prediction_actions(created_at)",
     ]
     
     for index_sql in indexes:

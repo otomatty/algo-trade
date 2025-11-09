@@ -17,6 +17,7 @@
 import { Modal, Stack, Text, Badge, ScrollArea, Group, Divider } from '@mantine/core';
 import { StockPrediction } from '../../types/stock-prediction';
 import { AssociationChain } from './AssociationChain';
+import { ActionProposal } from './ActionProposal';
 
 interface PredictionDetailModalProps {
   prediction: StockPrediction | null;
@@ -142,6 +143,16 @@ export function PredictionDetailModal({ prediction, opened, onClose }: Predictio
           {prediction.association_chain && prediction.association_chain.length > 0 && (
             <AssociationChain chain={prediction.association_chain} />
           )}
+
+          <Divider />
+
+          <ActionProposal
+            predictionId={prediction.prediction_id}
+            suggestedAction={prediction.suggested_action || prediction.recommended_action}
+            onActionSaved={() => {
+              // Optionally refresh prediction data or show updated status
+            }}
+          />
 
           {prediction.created_at && (
             <Text size="xs" c="dimmed">
